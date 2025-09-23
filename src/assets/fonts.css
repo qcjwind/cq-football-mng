@@ -1,0 +1,8 @@
+@font-face {
+  font-family: 'AlibabaPhH';
+  src:
+    url('../assets/fonts/AlibabaPuHuiTi-3-115-Black.woff2') format('woff2'),
+    url('../assets/fonts/AlibabaPuHuiTi-3-115-Black.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}

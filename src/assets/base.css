@@ -1,0 +1,182 @@
+/* color palette from <https://github.com/vuejs/theme> */
+:root {
+  --el-menu-bg-color: #1d2024 !important;
+  --el-menu-hover-bg-color: #243146 !important;
+  --el-menu-text-color: #8994a0 !important;
+  --el-menu-hover-text-color: #e1f0ff !important;
+  --el-menu-active-color: #e1f0ff !important;
+}
+
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  font-weight: normal;
+}
+
+body {
+  background: rgba(13, 14, 16, 1);
+  margin: 0;
+}
+
+* {
+  box-sizing: border-box;
+  /* color: #b7b9bb; */
+}
+
+.c-tit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  color: #b7b9bb;
+  height: 52px;
+  padding: 0 20px;
+  font-size: 16px;
+  border-bottom: 1px solid #393c40;
+}
+
+.c-tit-bts {
+  display: inline-flex;
+  align-items: center;
+}
+
+.c-body {
+  padding: 20px;
+}
+
+.el-table {
+  --el-table-bg-color: #1d2024 !important;
+  --el-table-header-bg-color: #1d2024 !important;
+}
+
+.el-table__header-wrapper {
+  th {
+    color: #b7b9bb;
+    border: none !important;
+    background-color: #15181a !important;
+  }
+}
+
+.el-table__body {
+  tr {
+    background-color: transparent !important;
+    &:hover > td.el-table__cell {
+      background-color: rgba(21, 24, 26, 0.5) !important;
+    }
+  }
+  td {
+    border: none !important;
+    .cell {
+      color: #6c7582;
+      & > div {
+        color: #6c7582;
+      }
+    }
+  }
+  .el-table__row--striped td {
+    background-color: #15181a !important;
+  }
+}
+
+.el-table__inner-wrapper::before {
+  display: none;
+}
+
+.el-button--primary {
+  background-color: #147865 !important;
+  color: #fff !important;
+  border: none !important;
+  &:hover {
+    background-color: rgba(20, 120, 101, 0.5) !important;
+  }
+  &.is-text {
+    background-color: transparent !important;
+    color: #409eff !important;
+    &:hover {
+      opacity: 0.6;
+      background-color: transparent !important;
+    }
+  }
+}
+
+.el-button--danger {
+  background-color: rgba(171, 41, 67, 1) !important;
+  border: none !important;
+  color: #fff !important;
+  &:hover {
+    background-color: rgba(171, 41, 67, 0.5) !important;
+  }
+
+  &.is-text {
+    background-color: transparent !important;
+    color: #f56c6c !important;
+    &:hover {
+      opacity: 0.6;
+      background-color: transparent !important;
+    }
+  }
+}
+
+.is-loading.is-text::before {
+  background-color: transparent !important;
+}
+
+.el-button--success {
+  &.is-text {
+    &:hover {
+      opacity: 0.6;
+      background-color: transparent !important;
+    }
+  }
+}
+
+.el-button--warning {
+  &.is-text {
+    &:hover {
+      opacity: 0.6;
+      background-color: transparent !important;
+    }
+  }
+}
+
+.el-button--info {
+  background-color: rgba(227, 230, 237, 0.23) !important;
+  border: none !important;
+  color: #fff !important;
+  &:hover {
+    background-color: rgba(227, 230, 237, 0.5) !important;
+  }
+}
+
+.el-pagination {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 40px;
+
+  button,
+  .number {
+    background-color: transparent !important;
+    color: #8d99a3;
+  }
+  .is-active {
+    color: #5799dc;
+  }
+}
+
+.frm-btns {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.el-loading-mask {
+  background-color: rgba(122, 122, 122, 0.5) !important;
+}
+
+.flexf-c-c {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
