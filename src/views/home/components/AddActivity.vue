@@ -52,6 +52,12 @@
           ></el-option>
         </el-select>
       </el-form-item>
+      <el-form-item label="闸机url：" prop="gateUrl">
+        <el-input v-model="activity.gateUrl" placeholder="请输入闸机url："></el-input>
+      </el-form-item>
+      <el-form-item label="闸机token：" prop="gateToken">
+        <el-input v-model="activity.gateToken" placeholder="请输入闸机token"></el-input>
+      </el-form-item>
       <el-form-item label="赛事详情：" prop="detail">
         <div ref="editorRef" style="width: 100%; height: 500px"></div>
       </el-form-item>
@@ -244,6 +250,8 @@ const submit = () => {
       startTime: activity.value.startTime,
       endTime: activity.value.endTime,
       startSaleTime: dayjs(activity.value.startSaleTime).format('YYYY-MM-DD HH:mm:ss'),
+      gateUrl: activity.value.gateUrl,
+      gateToken: activity.value.gateToken,
     }
     if (activity.value.id) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment

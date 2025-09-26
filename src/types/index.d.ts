@@ -11,6 +11,8 @@ export interface ActivityInfo {
   status: string
   venueId: number
   startSaleTime: string
+  gateUrl?: string
+  gateToken?: string
 }
 
 export type ActivityEnum = 'ENABLE' | 'DISABLE'
