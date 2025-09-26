@@ -1,25 +1,21 @@
-import type { server } from "typescript"
-
 export interface ActivityInfo {
-  id?: number
-  name: string
-  detail?: string
-  startTime: string
+  cover: string
+  detail: string
   endTime: string
-  type: ActivityEnum
-  mapInfo?: {
-    center: LatLng
-    info: number[][]
-  }
-  startPointLng?: number;
-  startPointLat?: number;
-  gryInfo?: string
-  delLoading?: boolean
+  giftTicketUrl: string
+  id: number
+  matineeName: string
+  name: string
+  saleStatus: string
+  startTime: string
+  status: string
+  venueId: number
+  startSaleTime: string
 }
 
-export type ActivityEnum = 'SINGLE' | 'TEAM'
+export type ActivityEnum = 'ENABLE' | 'DISABLE'
 
-export type ActivityStatusEnum = 'DISABLE' | 'ENABLE'
+export type ActivityStatusEnum = 'NOT_FINISH' | 'FINISH'
 
 export interface LatLng {
   lat: number
@@ -62,17 +58,6 @@ export type DevicesEnum = 'HE_FA' | 'FEI_FA' | 'YOU_DAO'
 
 export type DevicesStatusEnum = 'ONLINE' | 'OFFLINE'
 
-export interface DevicesInfo {
-  id?: number
-  activityId?: number
-  name: string
-  lat: string | number
-  lng: string | number
-  status?: DevicesStatusEnum
-  type: DevicesEnum
-  delLoading?: boolean
-}
-
 export type ContestType = 'INIT' | 'ENDED' | 'ING'
 
 export interface ActivityUserInfo {
@@ -95,26 +80,29 @@ export interface UserPosition {
 
 export type UserHistoryPosition = (LatLng & { time: number })[]
 
-export interface LiveItem {
-  publisher: {
-    app: string
-    stream: string
-    clientId: string
-    bytes: number
-    ip: string
-    video: {
-      codec: string
-      width: number
-      height: number
-      profile: string
-      level: number
-      fps: number
-    }
-  }
+export interface VenueInfo {
+  id?: number
+  areaCode: string
+  cityCode: string
+  codeArr: string[]
+  detail: string
+  gmtCreate: string
+  gmtModify: string
+  name: string
+  provinceCode: string
+  skuInfo: string
+  venueAddress: string
+  venueLat: number
+  venueLng: number
 }
 
-export interface LiveResult {
-  live: {
-    [ket: string]: LiveItem
-  }
+export interface OssSts {
+  dir: string
+  host: string
+  policy: string
+  security_token: string
+  signature: string
+  version: string
+  x_oss_credential: string
+  x_oss_date: string
 }

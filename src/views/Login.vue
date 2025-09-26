@@ -66,7 +66,7 @@ const submit = (formEl: FormInstance | null) => {
         userStore.setUserInfo({
           token: res.data.token as string,
           username: login.username as string,
-          authorization: res.data.authorization as string,
+          // authorization: res.data.authorization as string,
         })
         router.push('/home')
       })

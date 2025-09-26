@@ -7,11 +7,8 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AddVenue: typeof import('./src/components/AddVenue.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
-    ElInput: typeof import('element-plus/es')['ElInput']
-    ElPopconfirm: typeof import('element-plus/es')['ElPopconfirm']
-    ElRadio: typeof import('element-plus/es')['ElRadio']
-    ElRadioGroup: typeof import('element-plus/es')['ElRadioGroup']
     Header: typeof import('./src/components/Header.vue')['default']
     LeftMenu: typeof import('./src/components/LeftMenu.vue')['default']
     MapActivity: typeof import('./src/components/MapActivity.vue')['default']

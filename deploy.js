@@ -8,14 +8,14 @@ import dayjs from 'dayjs'
 
 const remotePathDev = '/usr/share/nginx' // dev zip资源路径
 const resourcesName = 'resources' // zip资源文件夹名称
-const fileName = 'gry' // 需要发布的文件名
+const fileName = 'yc' // 需要发布的文件名
 const fullName = `${fileName}${dayjs().format('YYYYMMDDHHmmss')}.zip` // zip文件全称
 
 const sshConfig = {
   dev: {
-    host: '39.99.39.26',
+    host: '47.108.163.156',
     username: 'root',
-    password: 'NEImeng2025',
+    password: 'Yuchao2025###',
     dest: remotePathDev,
     port: 22,
   },

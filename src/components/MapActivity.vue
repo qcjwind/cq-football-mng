@@ -2,7 +2,7 @@
   <ElDialog
     v-model="dialogMap"
     width="1100px"
-    :title="props.type === 'point' ? '选择设备位置' : '选择活动范围'"
+    :title="props.type === 'point' ? '请标记场馆位置' : '选择活动范围'"
     @close="clearMap"
   >
     <div class="map" id="map">
@@ -25,12 +25,12 @@
           </div>
         </div>
       </div>
-      <div class="switch-mode">
+      <!-- <div class="switch-mode">
         <span @click="addTileLayer" :class="tileLayer ? 'is-active' : ''" class="item">卫星</span>
         <span @click="removeTileLayer" :class="!tileLayer ? 'is-active' : ''" class="item"
           >路网</span
         >
-      </div>
+      </div> -->
     </div>
     <div class="frm-btns">
       <ElButton @click="dialogMap = false">取消</ElButton>
@@ -42,7 +42,7 @@
 <script setup lang="ts">
 import { watch, ref } from 'vue'
 import { ElDialog, ElInput, ElMessage } from 'element-plus'
-import type { Any, LatLng, ActivityInfo } from '@/types/index'
+import type { Any, LatLng } from '@/types/index'
 
 interface LocationTips {
   name?: string
@@ -55,20 +55,19 @@ interface LocationTips {
 
 interface IProps {
   type?: 'point' | 'range'
-  ract?: ActivityInfo['mapInfo']
   markerCenter?: LatLng | null
 }
 
 type Callback = () => void | null
 
 const dialogMap = defineModel({ default: false })
-const mapInfo = defineModel('mapInfo')
+const pointInfo = defineModel('pointInfo')
 const props = defineProps<IProps>()
 const emit = defineEmits(['pointCallback'])
 const keywords = ref<string>()
 const currentLocation = ref<LocationTips | null>()
 const locationTipArr = ref<LocationTips[]>([])
-const tileLayer = ref<boolean>(true)
+const tileLayer = ref<boolean>(false)
 const mapPromise = Promise.withResolvers()
 let map: Any = null
 let autoComplete: Any = null
@@ -122,11 +121,10 @@ const initMap = () => {
       layer2 = AMap.createDefaultLayer()
       map = new AMap.Map('map', {
         viewMode: '2D', //默认使用 2D 模式
-        layers: [layer1, layer2],
-        center: [111.77611700215222, 40.85714942585836],
-        zoom: 15, //地图级别
+        layers: [layer2],
+        center: [106.445802, 29.570552],
+        zoom: 10, //地图级别
       })
-      map.setLayers([layer1])
 
       AMap.plugin('AMap.AutoComplete', function () {
         const autoOptions = {
@@ -223,7 +221,7 @@ const createRact = async (path: number[][]) => {
     fillColor: '#1791fc',
     zIndex: 50,
     bubble: true,
-    draggable: true
+    draggable: true,
   })
   map.add([polygon])
   // 缩放地图到合适的视野级别
@@ -268,16 +266,11 @@ const confirmMapRect = () => {
     ElMessage.warning('请标记活动范围')
     return
   }
-  const rect = polyEditor.getTarget()
-  const paths = (rect.getPath() as LatLng[]) || []
-
-  mapInfo.value = {
-    info: paths?.map((item) => [item?.lng, item?.lat]),
-    center: {
-      lng: currentLocation.value?.lng,
-      lat: currentLocation.value?.lat,
-    },
+  pointInfo.value = {
+    lng: currentLocation.value?.lng,
+    lat: currentLocation.value?.lat,
   }
+
   dialogMap.value = false
   emit('pointCallback')
 }

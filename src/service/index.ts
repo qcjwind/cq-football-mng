@@ -5,11 +5,8 @@ import type {
   ResponseList,
   LoginResult,
   Pageing,
-  DevicesInfo,
-  ActivityUserInfo,
-  UserPosition,
-  UserHistoryPosition,
-  LiveResult,
+  VenueInfo,
+  OssSts,
 } from '@/types/index'
 
 export const loginAPI = (data: { username: string; password: string }) => {
@@ -18,98 +15,55 @@ export const loginAPI = (data: { username: string; password: string }) => {
 }
 
 export const addActivityAPI = (activity: ActivityInfo) => {
-  const url = 'mng/activity/add'
+  const url = 'mng/match/add'
   return http.post<ResponseTemp<null>>(url, activity)
 }
 
 export const editActivityAPI = (activity: ActivityInfo) => {
-  const url = 'mng/activity/update'
+  const url = 'mng/match/update'
   return http.post<ResponseTemp<null>>(url, activity)
 }
 
 export const deleteActivityAPI = (id: number) => {
-  const url = 'mng/activity/delete'
+  const url = 'mng/match/delete'
   return http.post<ResponseTemp<null>>(url, { id })
 }
 
 export const updateActivityStatusAPI = (id: number, status: string) => {
-  const url = 'mng/activity/updateStatus'
+  const url = 'mng/match/updateStatus'
   return http.post<ResponseTemp<null>>(url, { id, status })
 }
 
 export const getActivityListAPI = (param: Pageing) => {
-  const url = 'mng/activity/list'
+  const url = 'mng/match/list'
   return http.post<ResponseList<ActivityInfo[]>>(url, param)
 }
 
-export const addGryAPI = (data: DevicesInfo) => {
-  const url = 'mng/gry/add'
-  return http.post<ResponseTemp<null>>(url, data)
+export const getVenueListAPI = (param: Pageing) => {
+  const url = 'mng/venue/list'
+  return http.post<ResponseList<VenueInfo[]>>(url, param)
 }
 
-export const getGryListAPI = (param: Pageing & { activityId: number }) => {
-  const url = 'mng/gry/listAll'
-  return http.post<ResponseList<DevicesInfo[]>>(url, param)
+export const addVenueAPI = (venue: VenueInfo) => {
+  const url = 'mng/venue/add'
+  return http.post<ResponseTemp<null>>(url, venue)
 }
 
-export const deleteGryAPI = (id: number) => {
-  const url = 'mng/gry/delete'
-  return http.post<ResponseTemp<null>>(url, { id })
+export const editVenueAPI = (venue: VenueInfo) => {
+  const url = 'mng/venue/update'
+  return http.post<ResponseTemp<null>>(url, venue)
 }
 
-export const updateGryAPI = (param: DevicesInfo) => {
-  const url = 'mng/gry/update'
-  return http.post<ResponseTemp<null>>(url, param)
+export const getOssStsAPI = () => {
+  const url = 'mng/oss/sts'
+  return http.post<ResponseTemp<OssSts>>(url, {})
 }
 
-export const updatePasswordAPI = (password: string) => {
-  const url = 'mng/account/modifyPassword'
-  return http.post<ResponseTemp<null>>(url, { password })
-}
-
-export const getUserListAPI = (param: Pageing & { activityId: number }) => {
-  const url = 'mng/user/list'
-  return http.post<ResponseList<ActivityUserInfo[]>>(url, param)
-}
-
-export const endUserActivityAPI = (userId: number) => {
-  const url = 'mng/user/end'
-  return http.post<ResponseTemp<null>>(url, { userId })
-}
-
-export const getAllUserPositionAPI = () => {
-  const url = 'mng/position/getAll'
-  return http.post<ResponseTemp<UserPosition>>(url, {})
-}
-
-export const getUserHistoryPositionAPI = (userId: number) => {
-  const url = 'mng/position/history'
-  return http.post<ResponseTemp<UserHistoryPosition>>(url, { userId })
-}
-
-export const updateGradeAPI = (userId: number, grade: string) => {
-  const url = 'mng/user/updateGrade'
-  return http.post<ResponseTemp<UserHistoryPosition>>(url, { userId, grade })
-}
-
-export const getLiveListAPI = () => {
-  const url = 'api/streams'
-  return http.get<LiveResult>(url, {})
-}
-
-export const getAllLiveListAPI = () => {
-  const url = 'all'
-  return http.get<Record<string, string[]>>(url, {})
-}
-
-
-export const removeUserAPI = (id: number) => {
-  const url = 'mng/user/delete'
-  return http.post<ResponseTemp<null>>(url, { id })
-}
-
-
-export const updateGryStatusAPI = (id: number, status: string) => {
-  const url = 'mng/gry/updateStatus'
-  return http.post<ResponseTemp<null>>(url, { id, status })
+export const uploadOssAPI = (url: string, formData: FormData) => {
+  return http.post<ResponseTemp<null>>(url, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      requestType: 'upload',
+    },
+  })
 }

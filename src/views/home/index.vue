@@ -9,6 +9,12 @@
     <el-table style="width: 100%" :data="table" stripe>
       <el-table-column type="index" label="序号" width="60" align="center"></el-table-column>
       <el-table-column prop="name" label="赛事名称" align="center"></el-table-column>
+      <el-table-column label="赛事封面" align="center">
+        <template #default="scope">
+          <img :src="scope.row.cover" alt="赛事封面" style="height: 50px">
+        </template>
+      </el-table-column>
+      <el-table-column prop="startSaleTime" label="开始售票时间" align="center"></el-table-column>
       <el-table-column prop="startTime" label="赛事开始时间" align="center"></el-table-column>
       <el-table-column prop="endTime" label="赛事结束时间" align="center"></el-table-column>
 
@@ -23,23 +29,16 @@
               type="primary"
               @click="updateActivityStatus(scope.row.id, 'ENABLE')"
               size="small"
-              >开启</ElButton
+              >上架</ElButton
             >
             <ElButton
               v-if="scope.row.status === 'ENABLE'"
               type="warning"
               @click="updateActivityStatus(scope.row.id, 'DISABLE')"
               size="small"
-              >关闭</ElButton
+              >下架</ElButton
             >
           </div>
-        </template>
-      </el-table-column>
-      <el-table-column label="赛事详情" align="center">
-        <template #default="scope">
-          <ElButton type="success" @click="openActivityUser(scope.row)" text size="small"
-            >查看</ElButton
-          >
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center">
@@ -81,7 +80,6 @@
 
 <script setup lang="ts">
 import { ref, onMounted, reactive } from 'vue'
-import { useRouter } from 'vue-router'
 import {
   ElTable,
   ElTableColumn,
@@ -92,12 +90,9 @@ import {
 } from 'element-plus'
 import AddActivity from './components/AddActivity.vue'
 import { getActivityListAPI, deleteActivityAPI, updateActivityStatusAPI } from '@/service/index'
-import { ActivityType, ActivityStatus } from '@/utils/constant'
-import { useActivityInfoStore } from '@/stores/index'
-import type { ActivityInfo, Pageing, ActivityEnum, ActivityStatusEnum } from '@/types/index'
+import { ActivityStatus } from '@/utils/constant'
+import type { ActivityInfo, Pageing, ActivityStatusEnum } from '@/types/index'
 
-const router = useRouter()
-const activityInfoStore = useActivityInfoStore()
 const table = ref<ActivityInfo[]>([])
 const dialogActivity = ref<boolean>(false)
 const tabLoading = ref<boolean>(false)
@@ -107,15 +102,6 @@ const page = reactive<Pageing>({
   pageSize: 10,
 })
 
-const jumpDarge = (item: ActivityInfo) => {
-  activityInfoStore.setActivityInfo(item)
-  const routerData = router.resolve({
-    path: '/screen',
-    query: { activityId: item.id },
-  })
-  window.open(routerData.href, '_blank')
-}
-
 const addActivity = () => {
   activityInfo.value = {}
   dialogActivity.value = true
@@ -123,15 +109,6 @@ const addActivity = () => {
 
 const addSuccess = () => {
   getActivityList()
-}
-
-const openDevices = (id: number) => {
-  router.push({ path: '/devices', query: { id } })
-}
-
-const openActivityUser = (item: ActivityInfo) => {
-  activityInfoStore.setActivityInfo(item)
-  router.push({ path: '/user', query: { id: item.id } })
 }
 
 const deleteActivity = (index: number, id: number) => {

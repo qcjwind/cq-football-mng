@@ -60,6 +60,9 @@ class Http {
           })
           return Promise.reject(new Error(res.statusText))
         }
+        if (res.config?.headers?.requestType === 'upload') {
+          return res
+        }
         const data = res.data as ResponseTemp
         const ignoreRequest = ['api/streams', 'all']
         const next = ignoreRequest.some((item) => res.config?.url === item)
@@ -106,10 +109,10 @@ class Http {
     })
   }
 
-  post<T>(url: string, data: Any): Promise<T> {
+  post<T>(url: string, data: Any, config?: AxiosRequestConfig): Promise<T> {
     return new Promise((resolve, reject) => {
       this._axiosInstance
-        .post<T>(url, data)
+        .post<T>(url, data, config)
         .then((res) => {
           const data = res.data
           resolve(data)

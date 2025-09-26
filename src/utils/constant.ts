@@ -1,6 +1,6 @@
-// export const BASE_URL = 'http://10.113.1.137:11888/'
+export const BASE_URL = 'http://10.113.1.26:80/'
 
-export const BASE_URL = 'http://nmradio.scqyxc.top:11888/'
+// export const BASE_URL = 'http://yuchao2025.zszlchina.com/'
 
 export const LIVE_URL = 'http://nmradio.scqyxc.top:11800/'
 
@@ -17,8 +17,8 @@ export const ActivityType = {
 }
 
 export const ActivityStatus = {
-  DISABLE: '关闭',
-  ENABLE: '开启',
+  DISABLE: '下架',
+  ENABLE: '上架',
 }
 
 export const DevicesTypes = {

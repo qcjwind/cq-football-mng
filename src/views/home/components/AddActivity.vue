@@ -1,5 +1,5 @@
 <template>
-  <el-dialog v-model="dialogActivity" title="新增活动" @close="clearForm">
+  <el-dialog style="width: 1200px" v-model="dialogActivity" title="新增活动" @close="clearForm">
     <el-form
       ref="activityRef"
       :model="activity"
@@ -7,44 +7,53 @@
       label-width="150"
       label-position="left"
     >
-      <el-form-item label="活动名称：" prop="name">
-        <el-input v-model="activity.name" placeholder="请输入活动名称"></el-input>
+      <el-form-item label="赛事名称：" prop="name">
+        <el-input v-model="activity.name" placeholder="请输入赛事名称"></el-input>
       </el-form-item>
-      <el-form-item label="活动类型：" prop="type">
-        <ElRadioGroup v-model="activity.type">
-          <ElRadio v-for="item in Object.entries(ActivityType)" :key="item[0]" :value="item[0]">{{
-            item[1]
-          }}</ElRadio>
-        </ElRadioGroup>
+      <el-form-item label="赛事封面：" prop="cover">
+        <el-upload
+          v-model="imageUrl"
+          class="avatar-uploader"
+          :http-request="uploadOss"
+          :show-file-list="false"
+          :on-success="handleAvatarSuccess"
+          :before-upload="beforeAvatarUpload"
+        >
+          <img v-if="imageUrl" :src="imageUrl" class="avatar" />
+          <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+        </el-upload>
       </el-form-item>
-      <el-form-item label="活动时间：" prop="startTime">
+      <el-form-item label="售票时间：" prop="startTime">
+        <ElDatePicker
+          style="width: 100%"
+          v-model="activity.startSaleTime"
+          type="datetime"
+          placeholder="请选择开始售票时间"
+          format="YYYY-MM-DD HH:mm:ss"
+        ></ElDatePicker>
+      </el-form-item>
+      <el-form-item label="赛事时间：" prop="startTime">
         <ElDatePicker
           v-model="dateRanage"
           @change="dateChange"
           type="datetimerange"
-          start-placeholder="请选择活动开始时间"
-          end-placeholder="请选择活动结束时间"
+          start-placeholder="请选择赛事开始时间"
+          end-placeholder="请选择赛事结束时间"
           format="YYYY-MM-DD HH:mm:ss"
         ></ElDatePicker>
       </el-form-item>
-      <el-form-item label="活动范围：" prop="mapInfo">
-        <div>
-          <ElButton @click="setActivityRange('range')">设置</ElButton>
-          <span>{{ activity.mapInfo?.center }}</span>
-        </div>
+      <el-form-item label="赛事场馆：" prop="venueId">
+        <el-select v-model="activity.venueId" placeholder="请选择赛事场馆">
+          <el-option
+            v-for="item in venueStore.venueAll"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id as number"
+          ></el-option>
+        </el-select>
       </el-form-item>
-      <el-form-item label="活动出发点：" prop="mapInfo">
-        <div>
-          <ElButton :disabled="!activity.mapInfo?.center?.lng" @click="setActivityRange('point')"
-            >设置</ElButton
-          >
-          <span v-if="activity?.startPointLat"
-            >{{ activity?.startPointLat }},{{ activity?.startPointLng }}</span
-          >
-        </div>
-      </el-form-item>
-      <el-form-item label="&nbsp;&nbsp;活动详情：" prop="detail">
-        <el-input v-model="activity.detail" type="textarea" placeholder="请输入活动详情"></el-input>
+      <el-form-item label="赛事详情：" prop="detail">
+        <div ref="editorRef" style="width: 100%; height: 500px"></div>
       </el-form-item>
     </el-form>
 
@@ -53,138 +62,188 @@
       <ElButton @click="submit" :loading="subLoading" type="primary">保存</ElButton>
     </div>
   </el-dialog>
-  <MapActivity
-    v-model="dialogMap"
-    v-model:map-info="activity.mapInfo"
-    :ract="ract"
-    :type="mapType"
-    :marker-center="markerCenter"
-    @point-callback="mapCallbck"
-  ></MapActivity>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onUnmounted, nextTick } from 'vue'
 import {
   ElDialog,
   ElForm,
   ElFormItem,
+  ElSelect,
+  ElOption,
   ElInput,
   ElDatePicker,
   ElButton,
   ElMessage,
-  ElRadioGroup,
-  ElRadio,
+  ElUpload,
+  ElIcon,
 } from 'element-plus'
-import MapActivity from '@/components/MapActivity.vue'
+import { Plus } from '@element-plus/icons-vue'
+import { AiEditor } from 'aieditor'
+import 'aieditor/dist/style.css'
 import dayjs from 'dayjs'
-import { addActivityAPI, editActivityAPI } from '@/service/index'
-import { ActivityType } from '@/utils/constant'
-import type { ActivityInfo, LatLng } from '@/types/index'
-import type { FormInstance, FormRules } from 'element-plus'
+import { addActivityAPI, editActivityAPI, getOssStsAPI, uploadOssAPI } from '@/service/index'
+import type { ActivityInfo, OssSts } from '@/types/index'
+import type { FormInstance, FormRules, UploadRequestOptions } from 'element-plus'
+import { useVenueStore } from '@/stores/venue'
+import { v4 as uuidv4 } from 'uuid'
 
 interface IProps {
   activityInfo: Partial<ActivityInfo>
 }
-
-// interface B {
-//   b1: number;
-//   b2: number;
-// }
-
-// interface A extends B {
-//   a1: string;
-//   a2: string;
-// }
-
-// type keys = Pick<B, 'b1'>
-// const str: keys = ''
-
+let editor: AiEditor | null = null
+const editorRef = ref<HTMLDivElement>()
 const dialogActivity = defineModel({ default: false })
 const props = defineProps<IProps>()
 const emit = defineEmits(['addSuccess'])
 const activityRef = ref<FormInstance>()
-const activity = ref<Partial<ActivityInfo>>({ type: 'SINGLE' })
+const activity = ref<Partial<ActivityInfo>>({})
 const dateRanage = ref()
-const dialogMap = ref<boolean>(false)
 const subLoading = ref<boolean>(false)
-const mapType = ref<'point' | 'range'>('range')
-const markerCenter = ref<LatLng | null>(null)
-const ract = ref<ActivityInfo['mapInfo']>()
+const ossSts = ref<OssSts | null>(null)
+const imageUrl = ref<string>()
 const rules = ref<FormRules>({
-  name: [{ required: true, message: '请输入活动名称' }],
-  type: [{ required: true, message: '请选择活动类型' }],
+  name: [{ required: true, message: '请输入赛事名称' }],
+  cover: [{ required: true, message: '请上传赛事封面' }],
+  startSaleTime: [{ required: true, message: '请选择开始售票时间' }],
   startTime: [{ required: true, message: '请选择活动时间范围', trigger: 'change' }],
-  mapInfo: [{ required: true, message: '请设置活动范围', trigger: 'change' }],
+  venueId: [{ required: true, message: '请选择赛事场馆', trigger: 'change' }],
+  detail: [{ required: true, message: '请输入赛事详情', trigger: 'change' }],
 })
-
-const mapCallbck = (res: LatLng) => {
-  if (res) {
-    activity.value.startPointLat = res.lat
-    activity.value.startPointLng = res.lng
-    activityRef.value?.validate()
-  }
-}
+const venueStore = useVenueStore()
 
 watch(
   () => props.activityInfo,
   (newInfo) => {
     if (newInfo.id) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const mapInfo = JSON.parse(newInfo.mapInfo || '{}')
-      activity.value = { ...newInfo, mapInfo }
       dateRanage.value = [newInfo.startTime, newInfo.endTime]
-    } else {
-      activity.value = { type: 'SINGLE' }
+      activity.value = { ...newInfo }
+      imageUrl.value = newInfo.cover || ''
+      editor?.setContent(newInfo.detail || '')
     }
   },
 )
 
+// 监听对话框打开状态，初始化编辑器
+watch(
+  () => dialogActivity.value,
+  async (isOpen) => {
+    if (isOpen) {
+      venueStore.getVenueAllList()
+      getOssSts()
+      await nextTick()
+      initEditor()
+    }
+  },
+  { immediate: true },
+)
+
+const beforeAvatarUpload = () => {}
+const handleAvatarSuccess = (url: string) => {
+  imageUrl.value = url
+}
+
+const getFileName = (fileName: string) => {
+  const arr = fileName?.split('.')
+  return uuidv4() + '.' + arr[arr.length - 1]
+}
+
+const uoloadFormData = (file: File) => {
+  const formData = new FormData()
+  const key = ossSts.value?.dir + getFileName(file.name)
+  formData.append('success_action_status', '200')
+  formData.append('policy', ossSts.value?.policy || '')
+  formData.append('x-oss-signature', ossSts.value?.signature || '')
+  formData.append('x-oss-signature-version', ossSts.value?.version || '')
+  formData.append('x-oss-credential', ossSts.value?.x_oss_credential || '')
+  formData.append('x-oss-date', ossSts.value?.x_oss_date || '')
+  formData.append('key', key)
+  formData.append('x-oss-security-token', ossSts.value?.security_token || '')
+  formData.append('file', file)
+
+  return { formData, key }
+}
+
+const uploadOss = (option: UploadRequestOptions | { file: File }) => {
+  return new Promise((resolve, reject) => {
+    const { formData, key } = uoloadFormData(option.file)
+    uploadOssAPI(ossSts.value?.host || '', formData)
+      .then(() => {
+        const url = `${ossSts.value?.host}/${key}`
+        resolve(url)
+      })
+      .catch((err) => {
+        reject(err)
+      })
+  })
+}
 const dateChange = () => {
   activity.value.startTime = dayjs(dateRanage.value[0]).format('YYYY-MM-DD HH:mm:ss')
   activity.value.endTime = dayjs(dateRanage.value[1]).format('YYYY-MM-DD HH:mm:ss')
 }
 
-const setActivityRange = (type: string) => {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  mapType.value = type
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  ract.value = { ...activity.value?.mapInfo }
-  if (type === 'point') {
-    markerCenter.value = {
-      lng: activity.value?.startPointLng as number,
-      lat: activity.value?.startPointLat as number,
-    }
+const initEditor = () => {
+  if (editor || !editorRef.value) {
+    return
   }
-
-  dialogMap.value = true
+  editor = new AiEditor({
+    element: editorRef.value as Element,
+    placeholder: '请输入赛事详情',
+    image: {
+      defaultSize: '100%',
+      uploader: (file: File) => {
+        return new Promise((resolve, reject) => {
+          uploadOss({ file })
+            .then((url) => {
+              resolve({ errorCode: 0, data: { src: url, alt: '图片 alt' } })
+            })
+            .catch((err) => {
+              reject(err)
+            })
+        })
+      },
+    },
+  })
+  editor?.setContent(activity.value.detail || '')
 }
 
 const clearForm = () => {
   dialogActivity.value = false
   dateRanage.value = []
   activityRef.value?.resetFields()
-  activity.value = { type: 'SINGLE' }
+  activity.value = {}
+  imageUrl.value = ''
+  // 清理编辑器内容
+  if (editor) {
+    editor.setContent('')
+  }
+}
+
+const getOssSts = () => {
+  getOssStsAPI().then((res) => {
+    ossSts.value = res.data
+  })
 }
 
 const submit = () => {
+  const editorContent = editor?.getHtml() || ''
+  if (editorContent && editorContent !== '<p></p>') {
+    activity.value.detail = editorContent
+  }
   activityRef.value?.validate((valid) => {
     if (!valid) {
       return
     }
     subLoading.value = true
+    // 获取编辑器内容
     const params = {
       name: activity.value.name,
-      detail: activity.value.detail,
+      detail: editorContent,
+      cover: imageUrl.value,
       startTime: activity.value.startTime,
       endTime: activity.value.endTime,
-      mapInfo: JSON.stringify(activity.value.mapInfo),
-      startPointLng: activity.value.startPointLng,
-      startPointLat: activity.value.startPointLat,
-      type: activity.value.type,
+      startSaleTime: dayjs(activity.value.startSaleTime).format('YYYY-MM-DD HH:mm:ss'),
     }
     if (activity.value.id) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -216,6 +275,35 @@ const submit = () => {
       })
   })
 }
+
+// 组件卸载时清理编辑器
+onUnmounted(() => {
+  editor?.destroy()
+})
 </script>
 
-<style></style>
+<style>
+.avatar-uploader .el-upload {
+  border: 1px dashed #4c4d4f;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: 0.2s;
+}
+
+.avatar-uploader .el-upload:hover {
+  border-color: #409eff;
+}
+
+.el-icon.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 178px;
+  height: 178px;
+  text-align: center;
+}
+.avatar {
+  width: 178px;
+}
+</style>

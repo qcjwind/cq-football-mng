@@ -24,7 +24,11 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  optimizeDeps: {
+    include: ['aieditor'],
+  },
   server: {
+    host: '0.0.0.0',
     proxy: {
       '/api': {
         target: 'http://nmradio.scqyxc.top:11888',
