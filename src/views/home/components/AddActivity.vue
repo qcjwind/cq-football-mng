@@ -23,7 +23,7 @@
           <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
         </el-upload>
       </el-form-item>
-      <el-form-item label="售票时间：" prop="startTime">
+      <el-form-item label="售票时间：" prop="startSaleTime">
         <ElDatePicker
           style="width: 100%"
           v-model="activity.startSaleTime"
