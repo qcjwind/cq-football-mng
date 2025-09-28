@@ -12,14 +12,13 @@
       </el-form-item>
       <el-form-item label="赛事封面：" prop="cover">
         <el-upload
-          v-model="imageUrl"
           class="avatar-uploader"
           :http-request="uploadOss"
           :show-file-list="false"
           :on-success="handleAvatarSuccess"
           :before-upload="beforeAvatarUpload"
         >
-          <img v-if="imageUrl" :src="imageUrl" class="avatar" />
+          <img v-if="activity.cover" :src="activity.cover" class="avatar" />
           <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
         </el-upload>
       </el-form-item>
@@ -125,7 +124,6 @@ watch(
     if (newInfo.id) {
       dateRanage.value = [newInfo.startTime, newInfo.endTime]
       activity.value = { ...newInfo }
-      imageUrl.value = newInfo.cover || ''
       editor?.setContent(newInfo.detail || '')
     }
   },
@@ -147,7 +145,8 @@ watch(
 
 const beforeAvatarUpload = () => {}
 const handleAvatarSuccess = (url: string) => {
-  imageUrl.value = url
+  // imageUrl.value = url
+  activity.value.cover = url
 }
 
 const getFileName = (fileName: string) => {
@@ -219,7 +218,6 @@ const clearForm = () => {
   dateRanage.value = []
   activityRef.value?.resetFields()
   activity.value = {}
-  imageUrl.value = ''
   // 清理编辑器内容
   if (editor) {
     editor.setContent('')
@@ -246,12 +244,13 @@ const submit = () => {
     const params = {
       name: activity.value.name,
       detail: editorContent,
-      cover: imageUrl.value,
+      cover: activity.value.cover,
       startTime: activity.value.startTime,
       endTime: activity.value.endTime,
       startSaleTime: dayjs(activity.value.startSaleTime).format('YYYY-MM-DD HH:mm:ss'),
       gateUrl: activity.value.gateUrl,
       gateToken: activity.value.gateToken,
+      venueId: activity.value.venueId,
     }
     if (activity.value.id) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment

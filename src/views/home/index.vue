@@ -14,6 +14,12 @@
           <img :src="scope.row.cover" alt="赛事封面" style="height: 50px">
         </template>
       </el-table-column>
+      <el-table-column label="增票二维码" align="center">
+        <template #default="scope">
+          <span v-if="!scope.row.giftTicketUrl">正在生成中...</span>
+          <a style="color: #409EFF" v-else :href="scope.row.giftTicketUrl" target="_blank">下载</a>
+        </template>
+      </el-table-column>
       <el-table-column prop="startSaleTime" label="开始售票时间" align="center"></el-table-column>
       <el-table-column prop="startTime" label="赛事开始时间" align="center"></el-table-column>
       <el-table-column prop="endTime" label="赛事结束时间" align="center"></el-table-column>
