@@ -4,7 +4,7 @@ import { markRaw } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
 import Login from '../views/Login.vue'
 import Layout from '../layout/index.vue'
-import { House, OfficeBuilding } from '@element-plus/icons-vue'
+import { House, OfficeBuilding, TrendCharts } from '@element-plus/icons-vue'
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
@@ -33,7 +33,19 @@ const router = createRouter({
           icon: markRaw(OfficeBuilding),
           component: () => import('../views/venue/index.vue'),
         },
+        {
+          path: '/sta',
+          name: '统计',
+          icon: markRaw(TrendCharts),
+          component: () => import('../views/sta/index.vue'),
+        },
       ],
+    },
+    {
+      path: '/agreement',
+      name: 'agreement',
+      isHideMenu: false,
+      component: () => import('../views/agreement/index.vue'),
     },
   ],
 })

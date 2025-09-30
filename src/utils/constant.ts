@@ -1,6 +1,6 @@
-export const BASE_URL = 'http://10.113.1.26:80/'
+// export const BASE_URL = 'http://10.113.1.26:80/'
 
-// export const BASE_URL = 'http://yuchao2025.zszlchina.com/'
+export const BASE_URL = 'http://yuchao2025.zszlchina.com/'
 
 export const LIVE_URL = 'http://nmradio.scqyxc.top:11800/'
 
