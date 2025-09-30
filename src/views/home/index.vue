@@ -63,6 +63,9 @@
             <ElButton type="success" @click="editActivity(scope.row)" text size="small"
               >修改</ElButton
             >
+            <ElButton type="primary" @click="goToStatistics(scope.row.id)" text size="small"
+              >数据</ElButton
+            >
           </div>
         </template>
       </el-table-column>
@@ -86,6 +89,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   ElTable,
   ElTableColumn,
@@ -98,6 +102,8 @@ import AddActivity from './components/AddActivity.vue'
 import { getActivityListAPI, deleteActivityAPI, updateActivityStatusAPI } from '@/service/index'
 import { ActivityStatus } from '@/utils/constant'
 import type { ActivityInfo, Pageing, ActivityStatusEnum } from '@/types/index'
+
+const router = useRouter()
 
 const table = ref<ActivityInfo[]>([])
 const dialogActivity = ref<boolean>(false)
@@ -144,6 +150,15 @@ const pageChange = (pageNum: number) => {
 const editActivity = (item: ActivityInfo) => {
   activityInfo.value = { ...item }
   dialogActivity.value = true
+}
+
+const goToStatistics = (matchId: number) => {
+  router.push({
+    path: '/sta',
+    query: {
+      matchId: matchId
+    }
+  })
 }
 
 const getActivityList = () => {

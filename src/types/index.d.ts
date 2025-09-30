@@ -98,6 +98,45 @@ export interface VenueInfo {
   venueLng: number
 }
 
+export interface SkuInfo {
+  area: string
+  gmtCreate: string
+  gmtModify: string
+  id: number
+  matchId: number
+  price: number
+  skuName: string
+  skuType: string
+  stockTicket: number
+  totalTicket: number
+  venueId: number
+}
+
+export interface TicketInfo {
+  area: string
+  bid: string
+  buyerId: number
+  gmtCreate: string
+  gmtModify: string
+  id: number
+  idNo: string
+  idType: string
+  matchId: number
+  mobile: string
+  name: string
+  orderId: number
+  price: number
+  saleStatus: string
+  saleTime: string
+  seatNo: number
+  seatRow: number
+  skuId: number
+  subArea: string
+  syncStatus: string
+  ticketType: string
+  venueId: number
+}
+
 export interface OssSts {
   dir: string
   host: string

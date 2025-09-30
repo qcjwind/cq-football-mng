@@ -37,6 +37,7 @@ const router = createRouter({
           path: '/sta',
           name: '统计',
           icon: markRaw(TrendCharts),
+          isHideMenu: false,
           component: () => import('../views/sta/index.vue'),
         },
       ],
