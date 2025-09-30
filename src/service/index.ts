@@ -37,7 +37,8 @@ export const getActivityInfoAPI = (id: number) => {
     match: ActivityInfo,
     skuList: SkuInfo[],
     ticket: TicketInfo,
-    venue: VenueInfo
+    venue: VenueInfo,
+    userCount: number
   }>>(url, { matchId: id })
 }
 

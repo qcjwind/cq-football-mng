@@ -3,6 +3,7 @@
     <ElCard body-style="display: flex; gap: 10px; justify-content: space-between;">
       <template #header>
         <span>总票数：{{ totalTickets }}</span>
+        <span style="margin-left: 30px;">当前注册人数：{{ userCountNum }}</span>
       </template>
       <ElCard style="width: 45%">
         <template #header>
@@ -68,6 +69,7 @@ const soldTickets = ref<number>(0)
 const remainingTickets = ref<number>(0)
 const saleSkuList = ref<SkuInfo[]>([])
 const giftSkuList = ref<SkuInfo[]>([])
+const userCountNum = ref<number>(0)
 
 // 计时器
 let timer: NodeJS.Timeout | null = null
@@ -75,7 +77,7 @@ let timer: NodeJS.Timeout | null = null
 // 获取数据的函数
 const fetchData = async () => {
   try {
-    const { data: { skuList = [], ticket, venue } = {} } = await getActivityInfoAPI(Number(matchId.value))
+    const { data: { skuList = [], ticket, venue, userCount } = {} } = await getActivityInfoAPI(Number(matchId.value))
     console.log('当前赛事ID:', matchId.value)
 
     // 分离购票和赠票数据
@@ -87,6 +89,7 @@ const fetchData = async () => {
     soldTickets.value = skuList.reduce((total, sku) => total + (sku.totalTicket - sku.stockTicket), 0)
     remainingTickets.value = skuList.reduce((total, sku) => total + sku.stockTicket, 0)
 
+    userCountNum.value = userCount as number
     console.log('统计数据更新:', {
       totalTickets: totalTickets.value,
       soldTickets: soldTickets.value,
@@ -120,7 +123,7 @@ onMounted(async () => {
 
   // 立即获取一次数据
   await fetchData()
-  
+
   // 启动定时器
   startTimer()
 })
