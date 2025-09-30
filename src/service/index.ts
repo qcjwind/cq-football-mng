@@ -7,6 +7,8 @@ import type {
   Pageing,
   VenueInfo,
   OssSts,
+  SkuInfo,
+  TicketInfo,
 } from '@/types/index'
 
 export const loginAPI = (data: { username: string; password: string }) => {
@@ -27,6 +29,16 @@ export const editActivityAPI = (activity: ActivityInfo) => {
 export const deleteActivityAPI = (id: number) => {
   const url = 'mng/match/delete'
   return http.post<ResponseTemp<null>>(url, { id })
+}
+
+export const getActivityInfoAPI = (id: number) => {
+  const url = 'mng/match/info'
+  return http.post<ResponseTemp<{
+    match: ActivityInfo,
+    skuList: SkuInfo[],
+    ticket: TicketInfo,
+    venue: VenueInfo
+  }>>(url, { matchId: id })
 }
 
 export const updateActivityStatusAPI = (id: number, status: string) => {

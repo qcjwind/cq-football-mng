@@ -37,3 +37,8 @@ npm run build
 ```sh
 npm run lint
 ```
+
+### 发布
+1. build-only
+
+2. deploy
