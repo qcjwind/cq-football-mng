@@ -8,7 +8,14 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AddVenue: typeof import('./src/components/AddVenue.vue')['default']
+    AiEditor: typeof import('./src/components/AiEditor.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
+    ElInput: typeof import('element-plus/es')['ElInput']
+    ElPagination: typeof import('element-plus/es')['ElPagination']
+    ElPopconfirm: typeof import('element-plus/es')['ElPopconfirm']
+    ElTable: typeof import('element-plus/es')['ElTable']
+    ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
+    ElUpload: typeof import('element-plus/es')['ElUpload']
     Header: typeof import('./src/components/Header.vue')['default']
     LeftMenu: typeof import('./src/components/LeftMenu.vue')['default']
     MapActivity: typeof import('./src/components/MapActivity.vue')['default']

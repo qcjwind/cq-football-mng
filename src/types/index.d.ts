@@ -8,11 +8,25 @@ export interface ActivityInfo {
   name: string
   saleStatus: string
   startTime: string
+  endSaleTime: string
+  buyLimit: number
+  agreementInfo: string
+  ticketShowInfo: string
+  allowRefund: 'Y' | 'N'
+  refundRule: string
   status: string
   venueId: number
   startSaleTime: string
   gateUrl?: string
+  editLoading?: boolean
   gateToken?: string
+}
+
+export interface ActivityDetail {
+  match: ActivityInfo
+  skuList: SkuInfo[]
+  venue: VenueInfo
+  userCount: number
 }
 
 export type ActivityEnum = 'ENABLE' | 'DISABLE'
@@ -104,9 +118,11 @@ export interface SkuInfo {
   gmtModify: string
   id: number
   matchId: number
-  price: number
   skuName: string
   skuType: string
+  price: number
+  description: string
+  skuStatus: string
   stockTicket: number
   totalTicket: number
   venueId: number

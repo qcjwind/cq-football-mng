@@ -19,17 +19,24 @@
         </el-dropdown-menu>
       </template>
     </el-dropdown>
- 
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { ElIcon, ElBreadcrumb, ElBreadcrumbItem, ElDropdown, ElDropdownMenu, ElDropdownItem } from 'element-plus'
+import {
+  ElIcon,
+  ElBreadcrumb,
+  ElBreadcrumbItem,
+  ElDropdown,
+  ElDropdownMenu,
+  ElDropdownItem,
+} from 'element-plus'
 import { LocationInformation, UserFilled } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/index'
 import type { RouteRecordRaw } from 'vue-router'
+import router from '@/router'
 
 const route = useRoute()
 const menus = ref<RouteRecordRaw[]>([])
@@ -38,7 +45,15 @@ const userStore = useUserStore()
 watch(
   () => route.fullPath,
   () => {
-    menus.value = route.matched
+    const lastItem = route.matched?.[route.matched.length - 1]
+    const arr = lastItem.path?.split('/')
+    const parentPath = arr?.slice(0, arr.length - 1).join('/')
+    const parentRouter = router.getRoutes().find((item) => item.path === parentPath)
+    let newMenu = [...route.matched]
+    if(parentRouter){
+      newMenu = [route.matched[0], parentRouter, route.matched[route.matched.length - 1]]
+    }
+    menus.value = newMenu
   },
   { immediate: true },
 )

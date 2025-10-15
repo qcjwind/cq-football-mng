@@ -122,31 +122,32 @@ const submit = () => {
       return
     }
     subLoading.value = true
-    const sku = [
-      { skuName: 'A区', area: 'A区', price: 0, totalTicket: 542 },
-      { skuName: 'B区', area: 'B区', price: 0, totalTicket: 541 },
-      { skuName: 'C区', area: 'C区', price: 0, totalTicket: 624 },
-      { skuName: 'E区', area: 'E区', price: 0, totalTicket: 1239 },
-      { skuName: 'F区', area: 'F区', price: 0, totalTicket: 1416 },
-      { skuName: 'G区', area: 'G区', price: 0, totalTicket: 1995 },
-    ]
+    // const sku = [
+    //   { skuName: 'A区', area: 'A区', price: 0, totalTicket: 542 },
+    //   { skuName: 'B区', area: 'B区', price: 0, totalTicket: 541 },
+    //   { skuName: 'C区', area: 'C区', price: 0, totalTicket: 624 },
+    //   { skuName: 'E区', area: 'E区', price: 0, totalTicket: 1239 },
+    //   { skuName: 'F区', area: 'F区', price: 0, totalTicket: 1416 },
+    //   { skuName: 'G区', area: 'G区', price: 0, totalTicket: 1995 },
+    // ]
 
-    const giftSku = [
-      { skuName: 'A区', area: 'A区', price: 0, totalTicket: 567 },
-      { skuName: 'B区', area: 'B区', price: 0, totalTicket: 567 },
-      { skuName: 'C区', area: 'C区', price: 0, totalTicket: 386 },
-      { skuName: 'D区', area: 'D区', price: 0, totalTicket: 2538 },
-      { skuName: 'E区', area: 'E区', price: 0, totalTicket: 381 },
-      { skuName: 'F区', area: 'F区', price: 0, totalTicket: 156 },
-      { skuName: 'G区', area: 'G区', price: 0, totalTicket: 570 },
-    ]
+    // const giftSku = [
+    //   { skuName: 'A区', area: 'A区', price: 0, totalTicket: 567 },
+    //   { skuName: 'B区', area: 'B区', price: 0, totalTicket: 567 },
+    //   { skuName: 'C区', area: 'C区', price: 0, totalTicket: 386 },
+    //   { skuName: 'D区', area: 'D区', price: 0, totalTicket: 2538 },
+    //   { skuName: 'E区', area: 'E区', price: 0, totalTicket: 381 },
+    //   { skuName: 'F区', area: 'F区', price: 0, totalTicket: 156 },
+    //   { skuName: 'G区', area: 'G区', price: 0, totalTicket: 570 },
+    // ]
     const params = {
       ...toRaw(venue.value),
       provinceCode: venue.value.codeArr?.[0] || '',
       cityCode: venue.value.codeArr?.[1] || '',
       areaCode: venue.value.codeArr?.[2] || '',
-      saleSkuInfo: JSON.stringify(sku),
-      giftSkuInfo: JSON.stringify(giftSku),
+      detail: 'xxxx'
+      // saleSkuInfo: JSON.stringify(sku),
+      // giftSkuInfo: JSON.stringify(giftSku),
     }
     delete params.codeArr
     if (venue.value.id) {

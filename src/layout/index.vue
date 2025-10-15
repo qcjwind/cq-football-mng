@@ -35,6 +35,7 @@ import Header from '@/components/Header.vue'
       min-height: 300px;
       max-height: 90%;
       overflow-y: auto;
+      overflow-x: hidden;
       background: #1d2024;
       border-radius: 10px;
     }

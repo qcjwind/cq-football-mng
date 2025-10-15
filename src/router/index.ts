@@ -28,6 +28,12 @@ const router = createRouter({
           component: () => import('../views/home/index.vue'),
         },
         {
+          path: '/home/ticketInfo',
+          name: '票务信息',
+          component: () => import('../views/ticketInfo/index.vue'),
+          isHideMenu: false,
+        },
+        {
           path: '/venue',
           name: '场馆列表',
           icon: markRaw(OfficeBuilding),

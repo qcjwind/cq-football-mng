@@ -11,13 +11,13 @@
       <el-table-column prop="name" label="赛事名称" align="center"></el-table-column>
       <el-table-column label="赛事封面" align="center">
         <template #default="scope">
-          <img :src="scope.row.cover" alt="赛事封面" style="height: 50px">
+          <img :src="scope.row.cover" alt="赛事封面" style="height: 50px" />
         </template>
       </el-table-column>
       <el-table-column label="赠票二维码" align="center">
         <template #default="scope">
           <span v-if="!scope.row.giftTicketUrl">正在生成中...</span>
-          <a style="color: #409EFF" v-else :href="scope.row.giftTicketUrl" target="_blank">下载</a>
+          <a style="color: #409eff" v-else :href="scope.row.giftTicketUrl" target="_blank">下载</a>
         </template>
       </el-table-column>
       <el-table-column prop="startSaleTime" label="开始售票时间" align="center"></el-table-column>
@@ -47,7 +47,21 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center">
+      <el-table-column label="票务信息" align="center">
+        <template #default="scope">
+          <ElButton type="primary" @click="openTicketInfo(scope.row.id)" text size="small"
+            >查看</ElButton
+          >
+        </template>
+      </el-table-column>
+      <el-table-column label="售票数据" align="center">
+        <template #default="scope">
+          <ElButton type="primary" @click="exportTicket(scope.row.id)" text size="small"
+            >导出</ElButton
+          >
+        </template>
+      </el-table-column>
+      <el-table-column fixed="right" label="操作" align="center" width="150">
         <template #default="scope">
           <div class="act-btns">
             <ElPopconfirm
@@ -60,7 +74,12 @@
                 >
               </template>
             </ElPopconfirm>
-            <ElButton type="success" @click="editActivity(scope.row)" text size="small"
+            <ElButton
+              type="success"
+              :loading="scope.row.editLoading"
+              @click="editActivity(scope.row)"
+              text
+              size="small"
               >修改</ElButton
             >
             <ElButton type="primary" @click="goToStatistics(scope.row.id)" text size="small"
@@ -99,11 +118,18 @@ import {
   ElMessage,
 } from 'element-plus'
 import AddActivity from './components/AddActivity.vue'
-import { getActivityListAPI, deleteActivityAPI, updateActivityStatusAPI } from '@/service/index'
-import { ActivityStatus } from '@/utils/constant'
+import {
+  getActivityListAPI,
+  deleteActivityAPI,
+  updateActivityStatusAPI,
+  getMatchInfoAPI,
+} from '@/service/index'
+import { ActivityStatus, BASE_URL } from '@/utils/constant'
 import type { ActivityInfo, Pageing, ActivityStatusEnum } from '@/types/index'
+import { useUserStore } from '@/stores'
 
 const router = useRouter()
+const userStore = useUserStore()
 
 const table = ref<ActivityInfo[]>([])
 const dialogActivity = ref<boolean>(false)
@@ -135,6 +161,29 @@ const deleteActivity = (index: number, id: number) => {
     })
 }
 
+const openTicketInfo = (matchId: number) => {
+  router.push({
+    path: '/home/ticketInfo',
+    query: {
+      matchId: matchId,
+    },
+  })
+}
+
+const downloadTemplate = () => {
+  window.open(
+    `${BASE_URL}mng/sku/uploadBatchDemo?token=${encodeURIComponent(userStore.user?.token || '')}`,
+    '_blank',
+  )
+}
+
+const exportTicket = (matchId: number) => {
+  window.open(
+    `${BASE_URL}mng/ticket/export?token=${encodeURIComponent(userStore.user?.token || '')}&matchId=${matchId}`,
+    '_blank',
+  )
+}
+
 const updateActivityStatus = (id: number, status: string) => {
   updateActivityStatusAPI(id, status).then(() => {
     ElMessage.success('操作成功')
@@ -148,16 +197,23 @@ const pageChange = (pageNum: number) => {
 }
 
 const editActivity = (item: ActivityInfo) => {
-  activityInfo.value = { ...item }
-  dialogActivity.value = true
+  item.editLoading = true
+  getMatchInfoAPI(item.id)
+    .then((res) => {
+      activityInfo.value = { ...res.data.match }
+      dialogActivity.value = true
+    })
+    .finally(() => {
+      item.editLoading = false
+    })
 }
 
 const goToStatistics = (matchId: number) => {
   router.push({
     path: '/sta',
     query: {
-      matchId: matchId
-    }
+      matchId: matchId,
+    },
   })
 }
 
@@ -189,5 +245,8 @@ onMounted(() => {
     padding: 0 5px;
     margin-left: 0;
   }
+}
+.c-body {
+  width: 100%;
 }
 </style>

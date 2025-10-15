@@ -1,5 +1,11 @@
 <template>
-  <el-dialog style="width: 1200px" v-model="dialogActivity" title="新增活动" @close="clearForm">
+  <el-drawer
+    size="900px"
+    class="activity-mode"
+    v-model="dialogActivity"
+    title="新增活动"
+    @close="clearForm"
+  >
     <el-form
       ref="activityRef"
       :model="activity"
@@ -22,12 +28,21 @@
           <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
         </el-upload>
       </el-form-item>
-      <el-form-item label="售票时间：" prop="startSaleTime">
+      <el-form-item label="售票开始时间：" prop="startSaleTime">
         <ElDatePicker
           style="width: 100%"
           v-model="activity.startSaleTime"
           type="datetime"
           placeholder="请选择开始售票时间"
+          format="YYYY-MM-DD HH:mm:ss"
+        ></ElDatePicker>
+      </el-form-item>
+      <el-form-item label="售票结束时间：" prop="endSaleTime">
+        <ElDatePicker
+          style="width: 100%"
+          v-model="activity.endSaleTime"
+          type="datetime"
+          placeholder="请选择售票结束时间"
           format="YYYY-MM-DD HH:mm:ss"
         ></ElDatePicker>
       </el-form-item>
@@ -51,6 +66,77 @@
           ></el-option>
         </el-select>
       </el-form-item>
+      <el-form-item label="购票协议：">
+        <el-tag
+          @click="editAgreement(item)"
+          v-for="(item, index) in agreement"
+          :key="index"
+          style="margin-right: 10px"
+          closable
+          @close="rmoveTag(index)"
+          >{{ item.name }}</el-tag
+        >
+        <ElButton type="primary" @click="addAgreementTag" size="small">+ 添加协议</ElButton>
+      </el-form-item>
+      <el-form-item label="单人限购张数：">
+        <el-input v-model="activity.buyLimit" placeholder="请输入单人限购张数，默认2张"></el-input>
+      </el-form-item>
+      <el-form-item label="票据展示信息：">
+        <el-checkbox-group v-model="ticketInfoList">
+          <el-checkbox v-for="item in ticketInfo" :key="item.value" :value="item.value">{{
+            item.label
+          }}</el-checkbox>
+        </el-checkbox-group>
+      </el-form-item>
+      <el-form-item label="是否可退票：">
+        <el-checkbox v-model="activity.allowRefund" true-value="Y" false-value="N"></el-checkbox>
+      </el-form-item>
+      <el-form-item v-if="activity.allowRefund === 'Y'" label="退票规则：">
+        <div style="display: flex; align-items: center; flex-direction: column">
+          <el-table :data="refundRules" border style="width: 700px; background: #fff">
+            <el-table-column label="距离截止时间(小时)" width="200">
+              <template #default="{ row }">
+                <el-input-number
+                  v-model="row.minBeforeEndHour"
+                  :min="0"
+                  :max="999"
+                  placeholder="请输入小时数"
+                  style="width: 100%"
+                />
+              </template>
+            </el-table-column>
+            <el-table-column label="扣款比例(%)" width="200">
+              <template #default="{ row }">
+                <el-input-number
+                  v-model="row.refundRate"
+                  :min="0"
+                  :max="100"
+                  placeholder="请输入扣款比例"
+                  style="width: 100%"
+                />
+              </template>
+            </el-table-column>
+            <el-table-column label="描述" width="200">
+              <template #default="{ row }">
+                <el-input v-model="row.timeDesc" placeholder="请输入描述" style="width: 100%" />
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="100">
+              <template #default="{ $index }">
+                <el-button type="danger" size="small" @click="removeRefundRule($index)">
+                  删除
+                </el-button>
+              </template>
+            </el-table-column>
+            <template #empty>
+              <span>若无规则，则默认按按全额退款</span>
+            </template>
+          </el-table>
+          <el-button type="primary" size="small" @click="addRefundRule" style="margin-top: 10px">
+            + 添加规则
+          </el-button>
+        </div>
+      </el-form-item>
       <el-form-item label="闸机url：" prop="gateUrl">
         <el-input v-model="activity.gateUrl" placeholder="请输入闸机url："></el-input>
       </el-form-item>
@@ -58,21 +144,35 @@
         <el-input v-model="activity.gateToken" placeholder="请输入闸机token"></el-input>
       </el-form-item>
       <el-form-item label="赛事详情：" prop="detail">
-        <div ref="editorRef" style="width: 100%; height: 500px"></div>
+        <AiEditor
+          v-model="activity.detail"
+          height="500px"
+          placeholder="请输入赛事详情"
+          ref="aiEditorRef"
+        />
       </el-form-item>
     </el-form>
 
-    <div class="frm-btns">
-      <ElButton @click="clearForm">取消</ElButton>
-      <ElButton @click="submit" :loading="subLoading" type="primary">保存</ElButton>
-    </div>
-  </el-dialog>
+    <template #footer>
+      <div class="frm-btns">
+        <ElButton @click="clearForm">取消</ElButton>
+        <ElButton @click="submit" :loading="subLoading" type="primary">保存</ElButton>
+      </div>
+    </template>
+  </el-drawer>
+
+  <!-- 添加协议对话框 -->
+  <AddAgreement
+    v-model="dialogAgreement"
+    :agreementData="agreementData"
+    @success="handleAgreementSuccess"
+  />
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onUnmounted, nextTick } from 'vue'
+import { ref, toRaw, watch } from 'vue'
 import {
-  ElDialog,
+  ElDrawer,
   ElForm,
   ElFormItem,
   ElSelect,
@@ -83,35 +183,52 @@ import {
   ElMessage,
   ElUpload,
   ElIcon,
+  ElTag,
+  ElCheckboxGroup,
+  ElCheckbox,
+  ElTable,
+  ElTableColumn,
+  ElInputNumber,
 } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
-import { AiEditor } from 'aieditor'
-import 'aieditor/dist/style.css'
 import dayjs from 'dayjs'
-import { addActivityAPI, editActivityAPI, getOssStsAPI, uploadOssAPI } from '@/service/index'
+import { addActivityAPI, editActivityAPI, uploadOssAPI } from '@/service/index'
 import type { ActivityInfo, OssSts } from '@/types/index'
 import type { FormInstance, FormRules, UploadRequestOptions } from 'element-plus'
 import { useVenueStore } from '@/stores/venue'
 import { v4 as uuidv4 } from 'uuid'
+import AiEditor from '@/components/AiEditor.vue'
+import AddAgreement from './AddAgreement.vue'
 
 interface IProps {
   activityInfo: Partial<ActivityInfo>
 }
-let editor: AiEditor | null = null
-const editorRef = ref<HTMLDivElement>()
+
+const aiEditorRef = ref<InstanceType<typeof AiEditor>>()
 const dialogActivity = defineModel({ default: false })
 const props = defineProps<IProps>()
 const emit = defineEmits(['addSuccess'])
+const ticketInfo = ref<{ label: string; value: string }[]>([
+  { label: '大区', value: 'area' },
+  { label: '小区', value: 'subArea' },
+  { label: '排', value: 'seatRow' },
+  { label: '号', value: 'seatNo' },
+])
 const activityRef = ref<FormInstance>()
-const activity = ref<Partial<ActivityInfo>>({})
+const activity = ref<Partial<ActivityInfo>>({cover: 'https://cy25yuchao.oss-cn-chengdu.aliyuncs.com/images/52803595-fdb2-4533-8ed8-0b604cfb9e02.jpg'})
+const ticketInfoList = ref<string[]>(['area', 'subArea', 'seatRow', 'seatNo'])
 const dateRanage = ref()
 const subLoading = ref<boolean>(false)
 const ossSts = ref<OssSts | null>(null)
-const imageUrl = ref<string>()
+const agreement = ref<{ name: string; text: string }[]>([])
+const agreementData = ref<{ name: string; text: string } | null>(null)
+const dialogAgreement = ref(false)
+const refundRules = ref<{ minBeforeEndHour: number; refundRate: number; timeDesc: string }[]>([])
 const rules = ref<FormRules>({
   name: [{ required: true, message: '请输入赛事名称' }],
   cover: [{ required: true, message: '请上传赛事封面' }],
   startSaleTime: [{ required: true, message: '请选择开始售票时间' }],
+  endSaleTime: [{ required: true, message: '请选择售票结束时间' }],
   startTime: [{ required: true, message: '请选择活动时间范围', trigger: 'change' }],
   venueId: [{ required: true, message: '请选择赛事场馆', trigger: 'change' }],
   detail: [{ required: true, message: '请输入赛事详情', trigger: 'change' }],
@@ -124,20 +241,30 @@ watch(
     if (newInfo.id) {
       dateRanage.value = [newInfo.startTime, newInfo.endTime]
       activity.value = { ...newInfo }
-      editor?.setContent(newInfo.detail || '')
+      aiEditorRef.value?.setContent(newInfo.detail || '')
+      agreement.value = JSON.parse(newInfo.agreementInfo || '[]')
+      refundRules.value = JSON.parse(newInfo.refundRule || '[]')
+      const ticketShowInfo = JSON.parse(newInfo.ticketShowInfo || '[]')
+      if (ticketShowInfo && ticketShowInfo.length > 0) {
+        const arr: string[] = []
+        ticketShowInfo.forEach((item: { [key: string]: boolean }) => {
+          const [key, value] = Object.entries(item)[0] as [string, boolean]
+          if (value) {
+            arr.push(key)
+          }
+        })
+        ticketInfoList.value = arr
+      }
     }
   },
 )
 
-// 监听对话框打开状态，初始化编辑器
+// 监听对话框打开状态
 watch(
   () => dialogActivity.value,
   async (isOpen) => {
     if (isOpen) {
       venueStore.getVenueAllList()
-      getOssSts()
-      await nextTick()
-      initEditor()
     }
   },
   { immediate: true },
@@ -149,6 +276,36 @@ const handleAvatarSuccess = (url: string) => {
   activity.value.cover = url
 }
 
+const editAgreement = (item: { name: string; text: string }) => {
+  dialogAgreement.value = true
+  agreementData.value = { ...item }
+}
+
+const rmoveTag = (index: number) => {
+  if (index > -1 && index < agreement.value.length) {
+    agreement.value.splice(index, 1)
+  }
+}
+
+const addAgreementTag = () => {
+  dialogAgreement.value = true
+}
+
+const handleAgreementSuccess = (data: { name: string; text: string }) => {
+  if (data.name && data.text) {
+    agreement.value.push({ ...data })
+  }
+}
+
+const addRefundRule = () => {
+  refundRules.value.push({ minBeforeEndHour: 24, refundRate: 10, timeDesc: '' })
+}
+
+const removeRefundRule = (index: number) => {
+  if (refundRules.value.length > 0) {
+    refundRules.value.splice(index, 1)
+  }
+}
 const getFileName = (fileName: string) => {
   const arr = fileName?.split('.')
   return uuidv4() + '.' + arr[arr.length - 1]
@@ -188,50 +345,27 @@ const dateChange = () => {
   activity.value.endTime = dayjs(dateRanage.value[1]).format('YYYY-MM-DD HH:mm:ss')
 }
 
-const initEditor = () => {
-  if (editor || !editorRef.value) {
-    return
-  }
-  editor = new AiEditor({
-    element: editorRef.value as Element,
-    placeholder: '请输入赛事详情',
-    image: {
-      defaultSize: '100%',
-      uploader: (file: File) => {
-        return new Promise((resolve, reject) => {
-          uploadOss({ file })
-            .then((url) => {
-              resolve({ errorCode: 0, data: { src: url, alt: '图片 alt' } })
-            })
-            .catch((err) => {
-              reject(err)
-            })
-        })
-      },
-    },
-  })
-  editor?.setContent(activity.value.detail || '')
-}
-
 const clearForm = () => {
   dialogActivity.value = false
   dateRanage.value = []
   activityRef.value?.resetFields()
   activity.value = {}
   // 清理编辑器内容
-  if (editor) {
-    editor.setContent('')
-  }
-}
-
-const getOssSts = () => {
-  getOssStsAPI().then((res) => {
-    ossSts.value = res.data
-  })
+  aiEditorRef.value?.clearContent()
+  // 重置退票规则
+  refundRules.value = [{ hours: 24, percentage: 10 }]
+  // 重置协议
+  agreement.value = []
+  // 重置票据信息
+  ticketInfoList.value = ['area', 'subArea', 'seatRow', 'seatNo']
 }
 
 const submit = () => {
-  const editorContent = editor?.getHtml() || ''
+  console.log('refundRules==', refundRules.value)
+  console.log('ticketInfoList==', ticketInfoList.value)
+  console.log('agreement==', agreement.value)
+
+  const editorContent = aiEditorRef.value?.getContent() || ''
   if (editorContent && editorContent !== '<p></p>') {
     activity.value.detail = editorContent
   }
@@ -251,6 +385,22 @@ const submit = () => {
       gateUrl: activity.value.gateUrl,
       gateToken: activity.value.gateToken,
       venueId: activity.value.venueId,
+      endSaleTime: dayjs(activity.value.endSaleTime).format('YYYY-MM-DD HH:mm:ss'),
+      buyLimit: activity.value.buyLimit,
+      allowRefund: activity.value.allowRefund,
+    }
+    if (agreement.value.length > 0) {
+      params.agreementInfo = JSON.stringify(toRaw(agreement.value))
+    }
+    if (refundRules.value.length > 0) {
+      params.refundRule = JSON.stringify(
+        toRaw(refundRules.value)?.sort((a, b) => a.minBeforeEndHour - b.minBeforeEndHour),
+      )
+    }
+    if (ticketInfoList.value.length > 0) {
+      params.ticketShowInfo = JSON.stringify(
+        ticketInfoList.value?.map((field) => ({ [field]: true })),
+      )
     }
     if (activity.value.id) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -282,14 +432,18 @@ const submit = () => {
       })
   })
 }
-
-// 组件卸载时清理编辑器
-onUnmounted(() => {
-  editor?.destroy()
-})
 </script>
 
 <style>
+.activity-mode {
+  :deep(.table__header-wrapper) {
+    th {
+      color: #b7b9bb;
+      border: none !important;
+      background-color: #fff !important;
+    }
+  }
+}
 .avatar-uploader .el-upload {
   border: 1px dashed #4c4d4f;
   border-radius: 6px;
