@@ -10,6 +10,7 @@ import type {
   SkuInfo,
   TicketInfo,
   ActivityDetail,
+  MaterialCodeParams,
 } from '@/types/index'
 
 export const loginAPI = (data: { username: string; password: string }) => {
@@ -135,4 +136,14 @@ export const uploadSeatsAPI = (file: FormData) => {
       'Content-Type': 'multipart/form-data',
     },
   })
+}
+
+export const generateMaterialCodeAPI = (params: MaterialCodeParams) => {
+  const url = '/mng/match/asyncGenerateQrcode'
+  return http.post<ResponseTemp<null>>(url, params)
+}
+
+export const previewMaterialCodeAPI = (params: MaterialCodeParams) => {
+  const url = '/mng/match/previewGenerateQrcode'
+  return http.post<ResponseTemp<string>>(url, params)
 }

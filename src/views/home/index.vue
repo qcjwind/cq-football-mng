@@ -16,8 +16,9 @@
       </el-table-column>
       <el-table-column label="赠票二维码" align="center">
         <template #default="scope">
-          <span v-if="!scope.row.giftTicketUrl">正在生成中...</span>
-          <a style="color: #409eff" v-else :href="scope.row.giftTicketUrl" target="_blank">下载</a>
+          <span v-if="!scope.row.giftTicketUrl" @click="generateMaterialCode(scope.row.id)" style="color: #409eff; cursor: pointer;">生码</span>
+          <span v-else-if="scope.row.giftTicketUrl === 'GENERATING'" style="color: #409eff; cursor: pointer;">生码中</span>
+          <el-button v-else type="primary" @click="downloadMaterialCode(scope.row.id)" text size="small">下载</el-button>
         </template>
       </el-table-column>
       <el-table-column prop="startSaleTime" label="开始售票时间" align="center"></el-table-column>
@@ -28,7 +29,7 @@
         <template #default="scope">
           <div class="flexf-c-c">
             <span style="font-size: 14px; margin-right: 5px">{{
-              ActivityStatus[scope.row.status as ActivityStatusEnum]
+              scope.row.status === 'ENABLE' ? '上架' : '下架'
             }}</span>
             <ElButton
               v-if="scope.row.status === 'DISABLE'"
@@ -104,6 +105,12 @@
     :activity-info="activityInfo"
     @add-success="addSuccess"
   ></AddActivity>
+
+  <GenerateMaterialCode
+    v-model="dialogMaterialCode"
+    :match-id="currentMatchId"
+    @success="handleMaterialCodeSuccess"
+  />
 </template>
 
 <script setup lang="ts">
@@ -118,14 +125,15 @@ import {
   ElMessage,
 } from 'element-plus'
 import AddActivity from './components/AddActivity.vue'
+import GenerateMaterialCode from '@/components/GenerateMaterialCode.vue'
 import {
   getActivityListAPI,
   deleteActivityAPI,
   updateActivityStatusAPI,
   getMatchInfoAPI,
 } from '@/service/index'
-import { ActivityStatus, BASE_URL } from '@/utils/constant'
-import type { ActivityInfo, Pageing, ActivityStatusEnum } from '@/types/index'
+import { BASE_URL } from '@/utils/constant'
+import type { ActivityInfo, Pageing } from '@/types/index'
 import { useUserStore } from '@/stores'
 
 const router = useRouter()
@@ -133,6 +141,8 @@ const userStore = useUserStore()
 
 const table = ref<ActivityInfo[]>([])
 const dialogActivity = ref<boolean>(false)
+const dialogMaterialCode = ref<boolean>(false)
+const currentMatchId = ref<number>(0)
 const tabLoading = ref<boolean>(false)
 const activityInfo = ref<Partial<ActivityInfo>>({})
 const page = reactive<Pageing>({
@@ -170,16 +180,17 @@ const openTicketInfo = (matchId: number) => {
   })
 }
 
-const downloadTemplate = () => {
-  window.open(
-    `${BASE_URL}mng/sku/uploadBatchDemo?token=${encodeURIComponent(userStore.user?.token || '')}`,
-    '_blank',
-  )
-}
 
 const exportTicket = (matchId: number) => {
   window.open(
     `${BASE_URL}mng/ticket/export?token=${encodeURIComponent(userStore.user?.token || '')}&matchId=${matchId}`,
+    '_blank',
+  )
+}
+
+const downloadMaterialCode = (matchId: number) => {
+  window.open(
+    `${BASE_URL}mng/match/downloadQrcode?token=${encodeURIComponent(userStore.user?.token || '')}&matchId=${matchId}`,
     '_blank',
   )
 }
@@ -217,6 +228,15 @@ const goToStatistics = (matchId: number) => {
   })
 }
 
+const generateMaterialCode = (matchId: number) => {
+  currentMatchId.value = matchId
+  dialogMaterialCode.value = true
+}
+
+const handleMaterialCodeSuccess = () => {
+  getActivityList()
+}
+
 const getActivityList = () => {
   const param = {
     pageNumber: page.pageNumber,
@@ -226,7 +246,7 @@ const getActivityList = () => {
   getActivityListAPI(param)
     .then((res) => {
       page.total = res.total
-      const list = res.data?.map((item) => ({ ...item, delLoading: false }))
+      const list = res.data?.map((item) => ({ ...item, delLoading: false, editLoading: false }))
       table.value = list
     })
     .finally(() => {

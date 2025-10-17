@@ -16,6 +16,7 @@ declare module 'vue' {
     ElTable: typeof import('element-plus/es')['ElTable']
     ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
     ElUpload: typeof import('element-plus/es')['ElUpload']
+    GenerateMaterialCode: typeof import('./src/components/GenerateMaterialCode.vue')['default']
     Header: typeof import('./src/components/Header.vue')['default']
     LeftMenu: typeof import('./src/components/LeftMenu.vue')['default']
     MapActivity: typeof import('./src/components/MapActivity.vue')['default']

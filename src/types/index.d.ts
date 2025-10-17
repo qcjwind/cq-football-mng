@@ -20,6 +20,7 @@ export interface ActivityInfo {
   gateUrl?: string
   editLoading?: boolean
   gateToken?: string
+  delLoading?: boolean
 }
 
 export interface ActivityDetail {
@@ -162,4 +163,23 @@ export interface OssSts {
   version: string
   x_oss_credential: string
   x_oss_date: string
+}
+
+export interface MaterialCodeParams {
+  matchId: number
+  bgImage: string
+  textSize: number
+  fontColor: string
+  qrcodeWidth: number
+  qrcodeHeight: number
+  qrcodeX: number
+  qrcodeY: number
+  areaX: number
+  areaY: number
+  subAreaX: number
+  subAreaY: number
+  rowX: number
+  rowY: number
+  seatX: number
+  seatY: number
 }

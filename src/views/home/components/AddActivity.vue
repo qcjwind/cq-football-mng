@@ -89,7 +89,15 @@
         </el-checkbox-group>
       </el-form-item>
       <el-form-item label="是否可退票：">
-        <el-checkbox v-model="activity.allowRefund" true-value="Y" false-value="N"></el-checkbox>
+        <el-checkbox style="margin-right: 20px" v-model="activity.allowRefund" true-value="Y" false-value="N"></el-checkbox>
+        <el-form-item v-if="activity.allowRefund === 'Y'" label="退款截止时间：" prop="endTime">
+          <ElDatePicker
+          v-model="endTime"
+          type="datetime"
+          placeholder="请选择退款截止时间"
+          format="YYYY-MM-DD HH:mm:ss"
+        ></ElDatePicker>
+        </el-form-item>
       </el-form-item>
       <el-form-item v-if="activity.allowRefund === 'Y'" label="退票规则：">
         <div style="display: flex; align-items: center; flex-direction: column">
@@ -215,18 +223,20 @@ const ticketInfo = ref<{ label: string; value: string }[]>([
   { label: '号', value: 'seatNo' },
 ])
 const activityRef = ref<FormInstance>()
-const activity = ref<Partial<ActivityInfo>>({cover: 'https://cy25yuchao.oss-cn-chengdu.aliyuncs.com/images/52803595-fdb2-4533-8ed8-0b604cfb9e02.jpg'})
+const activity = ref<Partial<ActivityInfo>>({})
 const ticketInfoList = ref<string[]>(['area', 'subArea', 'seatRow', 'seatNo'])
 const dateRanage = ref()
 const subLoading = ref<boolean>(false)
 const ossSts = ref<OssSts | null>(null)
 const agreement = ref<{ name: string; text: string }[]>([])
 const agreementData = ref<{ name: string; text: string } | null>(null)
+const endTime = ref<string>('')
 const dialogAgreement = ref(false)
 const refundRules = ref<{ minBeforeEndHour: number; refundRate: number; timeDesc: string }[]>([])
 const rules = ref<FormRules>({
   name: [{ required: true, message: '请输入赛事名称' }],
   cover: [{ required: true, message: '请上传赛事封面' }],
+  endTime: [{ required: true, message: '请选择退款截止时间' }],
   startSaleTime: [{ required: true, message: '请选择开始售票时间' }],
   endSaleTime: [{ required: true, message: '请选择售票结束时间' }],
   startTime: [{ required: true, message: '请选择活动时间范围', trigger: 'change' }],
@@ -243,7 +253,9 @@ watch(
       activity.value = { ...newInfo }
       aiEditorRef.value?.setContent(newInfo.detail || '')
       agreement.value = JSON.parse(newInfo.agreementInfo || '[]')
-      refundRules.value = JSON.parse(newInfo.refundRule || '[]')
+      const refundRule = JSON.parse(newInfo.refundRule || '{}')
+      refundRules.value = refundRule.refundRules || []
+      endTime.value = refundRule.endTime || ''
       const ticketShowInfo = JSON.parse(newInfo.ticketShowInfo || '[]')
       if (ticketShowInfo && ticketShowInfo.length > 0) {
         const arr: string[] = []
@@ -353,7 +365,7 @@ const clearForm = () => {
   // 清理编辑器内容
   aiEditorRef.value?.clearContent()
   // 重置退票规则
-  refundRules.value = [{ hours: 24, percentage: 10 }]
+  refundRules.value = [{ minBeforeEndHour: 24, refundRate: 10, timeDesc: '' }]
   // 重置协议
   agreement.value = []
   // 重置票据信息
@@ -375,7 +387,7 @@ const submit = () => {
     }
     subLoading.value = true
     // 获取编辑器内容
-    const params = {
+    const params: any = {
       name: activity.value.name,
       detail: editorContent,
       cover: activity.value.cover,
@@ -392,10 +404,11 @@ const submit = () => {
     if (agreement.value.length > 0) {
       params.agreementInfo = JSON.stringify(toRaw(agreement.value))
     }
-    if (refundRules.value.length > 0) {
-      params.refundRule = JSON.stringify(
-        toRaw(refundRules.value)?.sort((a, b) => a.minBeforeEndHour - b.minBeforeEndHour),
-      )
+    if (activity.value.allowRefund === 'Y') {
+      params.refundRule = JSON.stringify({
+        endTime: dayjs(endTime.value).format('YYYY-MM-DD HH:mm:ss'),
+        refundRules: toRaw(refundRules.value)?.sort((a, b) => b.minBeforeEndHour - a.minBeforeEndHour),
+      })
     }
     if (ticketInfoList.value.length > 0) {
       params.ticketShowInfo = JSON.stringify(
