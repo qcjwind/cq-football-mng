@@ -6,7 +6,13 @@
           <el-input v-model="sku.skuName" placeholder="请输入SKU名称" />
         </el-form-item>
         <el-form-item label="价格" prop="price">
-          <el-input-number v-model="sku.price" placeholder="请输入价格" />
+          <el-input-number
+            v-model="sku.price"
+            placeholder="请输入价格"
+            :precision="2"
+            :min="0"
+            :max="999999.99"
+          />
         </el-form-item>
         <el-form-item label="协议内容" prop="description">
           <AiEditor

@@ -183,3 +183,40 @@ export interface MaterialCodeParams {
   seatX: number
   seatY: number
 }
+
+export type OrderStatusEnum = 'WAIT_PAY' | 'CANCEL' | 'PAY_SUCCESS' | 'REFUND_ING' | 'REFUND_SUCCESS'
+
+export interface OrderInfo {
+  buyNum: number
+  gmtCreate: string
+  gmtModify: string
+  id: number
+  matchId: number
+  name: string
+  orderInfo: string
+  orderNo: string
+  orderStatus: OrderStatusEnum
+  orderTime: string
+  payInfo: string
+  payTime: string
+  refundPrice: number
+  refundTime: string
+  skuId: number
+  skuName: string
+  totalPrice: number
+  userId: number
+  venueId: number
+  wxPrepayId: string
+  wxRefundId: string
+}
+
+export interface OrderListParams {
+  beginTime?: string
+  endTime?: string
+  matchId?: number
+  name?: string
+  orderNo?: string
+  orderStatus?: OrderStatusEnum
+  pageNumber: number
+  pageSize: number
+}

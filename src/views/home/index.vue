@@ -14,11 +14,11 @@
           <img :src="scope.row.cover" alt="赛事封面" style="height: 50px" />
         </template>
       </el-table-column>
-      <el-table-column label="赠票二维码" align="center">
+      <el-table-column label="物料码" align="center">
         <template #default="scope">
-          <span v-if="!scope.row.giftTicketUrl" @click="generateMaterialCode(scope.row.id)" style="color: #409eff; cursor: pointer;">生码</span>
-          <span v-else-if="scope.row.giftTicketUrl === 'GENERATING'" style="color: #409eff; cursor: pointer;">生码中</span>
-          <el-button v-else type="primary" @click="downloadMaterialCode(scope.row.id)" text size="small">下载</el-button>
+          <el-button v-if="scope.row.giftTicketUrl !== 'GENERATING'" @click="generateMaterialCode(scope.row.id)" type="primary" text size="small">生码</el-button>
+          <span v-if="scope.row.giftTicketUrl === 'GENERATING'" style="cursor: pointer;font-size: 12px;">生码中</span>
+          <el-button v-if="scope.row.giftTicketUrl !== 'GENERATING'" type="primary" @click="downloadMaterialCode(scope.row.id)" text size="small" style="margin-left: 0;">下载</el-button>
         </template>
       </el-table-column>
       <el-table-column prop="startSaleTime" label="开始售票时间" align="center"></el-table-column>

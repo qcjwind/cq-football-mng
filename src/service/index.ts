@@ -11,6 +11,8 @@ import type {
   TicketInfo,
   ActivityDetail,
   MaterialCodeParams,
+  OrderInfo,
+  OrderListParams,
 } from '@/types/index'
 
 export const loginAPI = (data: { username: string; password: string }) => {
@@ -146,4 +148,14 @@ export const generateMaterialCodeAPI = (params: MaterialCodeParams) => {
 export const previewMaterialCodeAPI = (params: MaterialCodeParams) => {
   const url = '/mng/match/previewGenerateQrcode'
   return http.post<ResponseTemp<string>>(url, params)
+}
+
+export const orderListAPI = (params: OrderListParams) => {
+  const url = '/mng/order/list'
+  return http.post<ResponseList<OrderInfo[]>>(url, params)
+}
+
+export const exportOrderAPI = (params: OrderListParams) => {
+  const url = '/mng/order/export'
+  return http.post<ResponseTemp<null>>(url, params)
 }

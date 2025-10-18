@@ -89,14 +89,19 @@
         </el-checkbox-group>
       </el-form-item>
       <el-form-item label="是否可退票：">
-        <el-checkbox style="margin-right: 20px" v-model="activity.allowRefund" true-value="Y" false-value="N"></el-checkbox>
+        <el-checkbox
+          style="margin-right: 20px"
+          v-model="activity.allowRefund"
+          true-value="Y"
+          false-value="N"
+        ></el-checkbox>
         <el-form-item v-if="activity.allowRefund === 'Y'" label="退款截止时间：" prop="endTime">
           <ElDatePicker
-          v-model="endTime"
-          type="datetime"
-          placeholder="请选择退款截止时间"
-          format="YYYY-MM-DD HH:mm:ss"
-        ></ElDatePicker>
+            v-model="endTime"
+            type="datetime"
+            placeholder="请选择退款截止时间"
+            format="YYYY-MM-DD HH:mm:ss"
+          ></ElDatePicker>
         </el-form-item>
       </el-form-item>
       <el-form-item v-if="activity.allowRefund === 'Y'" label="退票规则：">
@@ -256,12 +261,11 @@ watch(
       const refundRule = JSON.parse(newInfo.refundRule || '{}')
       refundRules.value = refundRule.refundRules || []
       endTime.value = refundRule.endTime || ''
-      const ticketShowInfo = JSON.parse(newInfo.ticketShowInfo || '[]')
-      if (ticketShowInfo && ticketShowInfo.length > 0) {
+      const ticketShowInfo = JSON.parse(newInfo.ticketShowInfo || '{}')
+      if (ticketShowInfo && Object.keys(ticketShowInfo).length > 0) {
         const arr: string[] = []
-        ticketShowInfo.forEach((item: { [key: string]: boolean }) => {
-          const [key, value] = Object.entries(item)[0] as [string, boolean]
-          if (value) {
+        Object.keys(ticketShowInfo).forEach(key => {
+          if (ticketShowInfo[key]) {
             arr.push(key)
           }
         })
@@ -303,9 +307,14 @@ const addAgreementTag = () => {
   dialogAgreement.value = true
 }
 
-const handleAgreementSuccess = (data: { name: string; text: string }) => {
-  if (data.name && data.text) {
-    agreement.value.push({ ...data })
+const handleAgreementSuccess = (data: { id?: string; name: string; text: string }) => {
+  if (data.id) {
+    const index = agreement.value.findIndex((item) => item.id === data.id)
+    if (index > -1) {
+      agreement.value[index] = { ...data }
+    } else {
+      agreement.value.push({ ...data })
+    }
   }
 }
 
@@ -403,17 +412,30 @@ const submit = () => {
     }
     if (agreement.value.length > 0) {
       params.agreementInfo = JSON.stringify(toRaw(agreement.value))
+    } else {
+      params.agreementInfo = '[]'
     }
+
     if (activity.value.allowRefund === 'Y') {
       params.refundRule = JSON.stringify({
         endTime: dayjs(endTime.value).format('YYYY-MM-DD HH:mm:ss'),
-        refundRules: toRaw(refundRules.value)?.sort((a, b) => b.minBeforeEndHour - a.minBeforeEndHour),
+        refundRules: toRaw(refundRules.value)?.sort(
+          (a, b) => b.minBeforeEndHour - a.minBeforeEndHour,
+        ),
       })
+    } else {
+      params.refundRule = '{}'
     }
     if (ticketInfoList.value.length > 0) {
-      params.ticketShowInfo = JSON.stringify(
-        ticketInfoList.value?.map((field) => ({ [field]: true })),
-      )
+      const ticketShowInfo = {
+        area: ticketInfoList.value.includes('area'),
+        subArea: ticketInfoList.value.includes('subArea'),
+        seatRow: ticketInfoList.value.includes('seatRow'),
+        seatNo: ticketInfoList.value.includes('seatNo'),
+      }
+      params.ticketShowInfo = JSON.stringify(ticketShowInfo)
+    } else {
+      params.ticketShowInfo = '[]'
     }
     if (activity.value.id) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment

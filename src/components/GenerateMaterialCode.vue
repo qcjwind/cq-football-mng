@@ -20,6 +20,15 @@
         </el-form-item>
       </div>
 
+      <div class="text-size-control">
+        <el-form-item label="本次生码范围：">
+          <el-radio-group v-model="ticketType">
+            <el-radio value="SALE_TICKET">售票</el-radio>
+            <el-radio value="GIFT_TICKET">赠票</el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </div>
+
       <!-- 元素选择 -->
       <div class="element-selection">
         <el-form-item label="选择元素：">
@@ -52,7 +61,11 @@
             @click="console.log('qrcode element clicked')"
           >
             <div class="element-content">二维码</div>
-            <div class="resize-handle" @mousedown.stop="startResize('qrcode', $event)" @click="console.log('resize handle clicked')"></div>
+            <div
+              class="resize-handle"
+              @mousedown.stop="startResize('qrcode', $event)"
+              @click="console.log('resize handle clicked')"
+            ></div>
           </div>
 
           <div
@@ -188,7 +201,7 @@ const canvasWrapper = ref<HTMLElement>()
 const bgCanvas = ref<HTMLImageElement>()
 const prevewLoading = ref(false)
 const prevewImageUrl = ref<string>('')
-
+const ticketType = ref<'SALE_TICKET' | 'GIFT_TICKET'>('GIFT_TICKET')
 // 表单数据
 const bgImageUrl = ref('')
 const selectedElements = ref<string[]>(['qrcode'])
@@ -295,7 +308,6 @@ const resetElementPositions = () => {
 }
 
 const startDrag = (element: string, event: MouseEvent) => {
-
   if (isResizing) return // 如果正在缩放，不启动拖拽
 
   isDragging = true
@@ -313,7 +325,6 @@ const startDrag = (element: string, event: MouseEvent) => {
 }
 
 const startResize = (element: string, event: MouseEvent) => {
-
   isResizing = true
   startX = event.clientX
   startY = event.clientY
@@ -442,6 +453,7 @@ const previewCode = () => {
     bgImage: bgImageUrl.value,
     textSize: textSize.value,
     fontColor: fontColor.value,
+    ticketType: ticketType.value,
   }
 
   if (selectedElements.value.includes('qrcode')) {
@@ -458,17 +470,17 @@ const previewCode = () => {
 
   if (selectedElements.value.includes('subArea')) {
     params.subAreaX = subAreaPosition.x
-    params.subAreaY = subAreaPosition.y  + textSize.value + 5
+    params.subAreaY = subAreaPosition.y + textSize.value + 5
   }
 
   if (selectedElements.value.includes('row')) {
     params.rowX = rowPosition.x
-    params.rowY = rowPosition.y  + textSize.value + 5
+    params.rowY = rowPosition.y + textSize.value + 5
   }
 
   if (selectedElements.value.includes('seat')) {
     params.seatX = seatPosition.x
-    params.seatY = seatPosition.y  + textSize.value + 5
+    params.seatY = seatPosition.y + textSize.value + 5
   }
 
   previewMaterialCodeAPI(params)
@@ -502,6 +514,7 @@ const generateCode = () => {
     bgImage: bgImageUrl.value,
     textSize: textSize.value,
     fontColor: fontColor.value,
+    ticketType: ticketType.value,
   }
 
   if (selectedElements.value.includes('qrcode')) {
