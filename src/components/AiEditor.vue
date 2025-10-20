@@ -19,6 +19,7 @@ interface IProps {
 
 interface IEmits {
   (e: 'update:modelValue', value: string): void
+  (e: 'update:ossSts', value: OssSts): void
 }
 
 const props = withDefaults(defineProps<IProps>(), {
@@ -38,6 +39,7 @@ let contentTimer: number | null = null
 const getOssSts = () => {
   getOssStsAPI().then((res) => {
     ossSts.value = res.data
+    emit('update:ossSts', res.data)
   })
 }
 

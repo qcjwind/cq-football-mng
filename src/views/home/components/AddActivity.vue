@@ -110,7 +110,7 @@
             <el-table-column label="距离截止时间(小时)" width="200">
               <template #default="{ row }">
                 <el-input-number
-                  v-model="row.minBeforeEndHour"
+                  v-model="row.beforeEndHour"
                   :min="0"
                   :max="999"
                   placeholder="请输入小时数"
@@ -118,7 +118,7 @@
                 />
               </template>
             </el-table-column>
-            <el-table-column label="扣款比例(%)" width="200">
+            <el-table-column label="退款比例(%)" width="200">
               <template #default="{ row }">
                 <el-input-number
                   v-model="row.refundRate"
@@ -131,7 +131,7 @@
             </el-table-column>
             <el-table-column label="描述" width="200">
               <template #default="{ row }">
-                <el-input v-model="row.timeDesc" placeholder="请输入描述" style="width: 100%" />
+                <el-input v-model="row.ruleDesc" placeholder="请输入描述" style="width: 100%" />
               </template>
             </el-table-column>
             <el-table-column label="操作" width="100">
@@ -162,6 +162,7 @@
           height="500px"
           placeholder="请输入赛事详情"
           ref="aiEditorRef"
+          @update:ossSts="updateOssSts"
         />
       </el-form-item>
     </el-form>
@@ -237,7 +238,7 @@ const agreement = ref<{ name: string; text: string }[]>([])
 const agreementData = ref<{ name: string; text: string } | null>(null)
 const endTime = ref<string>('')
 const dialogAgreement = ref(false)
-const refundRules = ref<{ minBeforeEndHour: number; refundRate: number; timeDesc: string }[]>([])
+const refundRules = ref<{ beforeEndHour: number; refundRate: number; ruleDesc: string }[]>([])
 const rules = ref<FormRules>({
   name: [{ required: true, message: '请输入赛事名称' }],
   cover: [{ required: true, message: '请上传赛事封面' }],
@@ -259,7 +260,7 @@ watch(
       aiEditorRef.value?.setContent(newInfo.detail || '')
       agreement.value = JSON.parse(newInfo.agreementInfo || '[]')
       const refundRule = JSON.parse(newInfo.refundRule || '{}')
-      refundRules.value = refundRule.refundRules || []
+      refundRules.value = refundRule.ruleList || []
       endTime.value = refundRule.endTime || ''
       const ticketShowInfo = JSON.parse(newInfo.ticketShowInfo || '{}')
       if (ticketShowInfo && Object.keys(ticketShowInfo).length > 0) {
@@ -286,10 +287,21 @@ watch(
   { immediate: true },
 )
 
-const beforeAvatarUpload = () => {}
+const beforeAvatarUpload = (file: File) => {
+  // 图片大小不超过2M
+  if (file.size > 2 * 1024 * 1024) {
+    ElMessage.error('图片大小不超过2M')
+    return false
+  }
+  return true
+}
 const handleAvatarSuccess = (url: string) => {
   // imageUrl.value = url
   activity.value.cover = url
+}
+
+const updateOssSts = (value: OssSts) => {
+  ossSts.value = value
 }
 
 const editAgreement = (item: { name: string; text: string }) => {
@@ -319,7 +331,7 @@ const handleAgreementSuccess = (data: { id?: string; name: string; text: string 
 }
 
 const addRefundRule = () => {
-  refundRules.value.push({ minBeforeEndHour: 24, refundRate: 10, timeDesc: '' })
+  refundRules.value.push({ beforeEndHour: 24, refundRate: 10, ruleDesc: '' })
 }
 
 const removeRefundRule = (index: number) => {
@@ -374,7 +386,7 @@ const clearForm = () => {
   // 清理编辑器内容
   aiEditorRef.value?.clearContent()
   // 重置退票规则
-  refundRules.value = [{ minBeforeEndHour: 24, refundRate: 10, timeDesc: '' }]
+  refundRules.value = [{ beforeEndHour: 24, refundRate: 10, ruleDesc: '' }]
   // 重置协议
   agreement.value = []
   // 重置票据信息
@@ -419,8 +431,8 @@ const submit = () => {
     if (activity.value.allowRefund === 'Y') {
       params.refundRule = JSON.stringify({
         endTime: dayjs(endTime.value).format('YYYY-MM-DD HH:mm:ss'),
-        refundRules: toRaw(refundRules.value)?.sort(
-          (a, b) => b.minBeforeEndHour - a.minBeforeEndHour,
+        ruleList: toRaw(refundRules.value)?.sort(
+          (a, b) => a.beforeEndHour - b.beforeEndHour,
         ),
       })
     } else {
