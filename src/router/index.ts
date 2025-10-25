@@ -60,6 +60,12 @@ const router = createRouter({
       isHideMenu: false,
       component: () => import('../views/agreement/index.vue'),
     },
+    {
+      path: '/share',
+      name: 'share',
+      isHideMenu: true,
+      component: () => import('../views/share/index.vue'),
+    },
   ],
 })
 

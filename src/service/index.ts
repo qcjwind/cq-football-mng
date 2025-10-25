@@ -159,3 +159,8 @@ export const exportOrderAPI = (params: OrderListParams) => {
   const url = '/mng/order/export'
   return http.post<ResponseTemp<null>>(url, params)
 }
+
+export const getMacthSkuDetailAPI = (skuId: number) => {
+  const url = '/mng/ticket/listAll'
+  return http.get<ResponseTemp<null>>(url, { skuId })
+}

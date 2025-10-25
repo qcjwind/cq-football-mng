@@ -10,7 +10,7 @@ import router from './router'
 
 router.beforeEach((to) => {
   const userStore = useUserStore()
-  const ignorePath = ['/login', '/agreement']
+  const ignorePath = ['/login', '/agreement', '/share']
   if (!userStore.user?.token && !ignorePath.includes(to.path)) {
     return '/login'
   }

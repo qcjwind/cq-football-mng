@@ -1,46 +1,26 @@
 <template>
   <div class="sta-container">
-    <ElCard body-style="display: flex; gap: 10px; justify-content: space-between;">
-      <template #header>
-        <span>总票数：{{ totalTickets }}</span>
-        <span style="margin-left: 30px">当前注册人数：{{ userCountNum }}</span>
-        <ElButton style="margin-left: 10px;" type="primary" size="small" @click="shareHandle">分享</ElButton>
-      </template>
-      <ElCard style="width: 45%">
+    <div class="summary-card">
+      <ElCard class="summary-item">
         <template #header>
           <span>已售票数</span>
         </template>
         <span>{{ soldTickets }}</span>
       </ElCard>
-      <ElCard style="width: 45%">
+      <ElCard class="summary-item">
         <template #header>
           <span>剩余票数</span>
         </template>
         <span>{{ remainingTickets }}</span>
       </ElCard>
-    </ElCard>
-
-    <!-- 分享弹窗 -->
-    <ElDialog v-model="shareDialogVisible" title="分享统计页面" width="500px">
-      <div class="share-content">
-        <p>分享链接：</p>
-        <div class="link-container">
-          <ElInput v-model="shareUrl" readonly />
-          <ElButton type="primary" @click="copyLink">复制链接</ElButton>
-        </div>
-        <p class="share-tip">点击复制链接，可以分享给其他人查看统计页面</p>
-      </div>
-      <template #footer>
-        <ElButton @click="shareDialogVisible = false">关闭</ElButton>
-      </template>
-    </ElDialog>
+    </div>
 
     <!-- // 超出自动换行 -->
     <ElCard body-style="display: flex; flex-wrap: wrap; gap: 10px;">
       <template #header>
         <span>购票详情</span>
       </template>
-      <ElCard v-for="sku in saleSkuList" :key="sku.id" @click="getMacthSkuDetail(sku.id)" style="width: 24%; flex-shrink: 0">
+      <ElCard v-for="sku in saleSkuList" :key="sku.id" class="sku-card">
         <template #header>
           <span>{{ sku.area }}</span>
         </template>
@@ -55,7 +35,7 @@
       <template #header>
         <span>赠票详情</span>
       </template>
-      <ElCard v-for="sku in giftSkuList" :key="sku.id" @click="getMacthSkuDetail(sku.id)" style="width: 24%; flex-shrink: 0">
+      <ElCard v-for="sku in giftSkuList" :key="sku.id" class="sku-card">
         <template #header>
           <span>{{ sku.area }}</span>
         </template>
@@ -71,8 +51,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { ElCard, ElButton, ElDialog, ElInput, ElMessage } from 'element-plus'
-import { getActivityInfoAPI, getMacthSkuDetailAPI } from '@/service/index'
+import { ElCard, ElButton } from 'element-plus'
+import { getActivityInfoAPI } from '@/service/index'
 import type { SkuInfo } from '@/types/index'
 
 const route = useRoute()
@@ -86,31 +66,22 @@ const saleSkuList = ref<SkuInfo[]>([])
 const giftSkuList = ref<SkuInfo[]>([])
 const userCountNum = ref<number>(0)
 
-// 分享相关状态
-const shareDialogVisible = ref(false)
-const shareUrl = ref('')
-
 // 计时器
 let timer: number | null = null
 
 // 获取数据的函数
 const fetchData = async () => {
   try {
-    const { data: { skuList = [], ticket, venue, userCount } = {} } = await getActivityInfoAPI(
-      Number(matchId.value),
-    )
+    const { data: { skuList = [], ticket, venue, userCount } = {} } = await getActivityInfoAPI(Number(matchId.value))
     console.log('当前赛事ID:', matchId.value)
 
     // 分离购票和赠票数据
-    saleSkuList.value = skuList.filter((sku) => sku.skuType === 'SALE_TICKET')
-    giftSkuList.value = skuList.filter((sku) => sku.skuType === 'GIFT_TICKET')
+    saleSkuList.value = skuList.filter(sku => sku.skuType === 'SALE_TICKET')
+    giftSkuList.value = skuList.filter(sku => sku.skuType === 'GIFT_TICKET')
 
     // 计算总票数、已售票数、剩余票数
     totalTickets.value = skuList.reduce((total, sku) => total + sku.totalTicket, 0)
-    soldTickets.value = skuList.reduce(
-      (total, sku) => total + (sku.totalTicket - sku.stockTicket),
-      0,
-    )
+    soldTickets.value = skuList.reduce((total, sku) => total + (sku.totalTicket - sku.stockTicket), 0)
     remainingTickets.value = skuList.reduce((total, sku) => total + sku.stockTicket, 0)
 
     userCountNum.value = userCount as number
@@ -119,7 +90,7 @@ const fetchData = async () => {
       soldTickets: soldTickets.value,
       remainingTickets: remainingTickets.value,
       saleSkuList: saleSkuList.value,
-      giftSkuList: giftSkuList.value,
+      giftSkuList: giftSkuList.value
     })
   } catch (error) {
     console.error('获取统计数据失败:', error)
@@ -139,38 +110,6 @@ const stopTimer = () => {
     clearInterval(timer)
     timer = null
   }
-}
-
-// 分享处理
-const shareHandle = () => {
-  // 生成staPreview页面的链接
-  const baseUrl = window.location.origin
-  const previewPath = `/#/share?type=share&matchId=${matchId.value}`
-  shareUrl.value = `${baseUrl}${previewPath}`
-  shareDialogVisible.value = true
-}
-
-// 复制链接
-const copyLink = async () => {
-  try {
-    await navigator.clipboard.writeText(shareUrl.value)
-    ElMessage.success('链接已复制到剪贴板')
-  } catch (error) {
-    // 如果clipboard API不可用，使用传统方法
-    const textArea = document.createElement('textarea')
-    textArea.value = shareUrl.value
-    document.body.appendChild(textArea)
-    textArea.select()
-    document.execCommand('copy')
-    document.body.removeChild(textArea)
-    ElMessage.success('链接已复制到剪贴板')
-  }
-}
-
-const getMacthSkuDetail = (skuId: number) => {
-  // getMacthSkuDetailAPI(skuId).then((res) => {
-  //   console.log(res)
-  // })
 }
 
 onMounted(async () => {
@@ -193,29 +132,53 @@ onUnmounted(() => {
 <style lang="less">
 .sta-container {
   background-color: #fff;
+  padding: 10px;
+  width: 100%;
+  box-sizing: border-box;
 
   .sta-item {
     display: flex;
     justify-content: space-between;
     font-size: 14px;
   }
-}
 
-.share-content {
-  .link-container {
+  .summary-card {
     display: flex;
     gap: 10px;
-    margin: 10px 0;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    width: 100%;
 
-    .el-input {
+    .summary-item {
+      width: calc(50% - 5px);
       flex: 1;
+    }
+
+    // 移动端适配
+    @media (max-width: 768px) {
+      flex-direction: column;
+      gap: 10px;
+
+      .summary-item {
+        width: 100%;
+      }
     }
   }
 
-  .share-tip {
-    color: #999;
-    font-size: 12px;
-    margin-top: 10px;
+  .sku-card {
+    width: 24%;
+    flex-shrink: 0;
+
+    // 移动端适配
+    @media (max-width: 768px) {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    // 平板端适配
+    @media (min-width: 769px) and (max-width: 1024px) {
+      width: 48%;
+    }
   }
 }
 
@@ -225,5 +188,16 @@ onUnmounted(() => {
 
 .el-card__body {
   text-align: center;
+}
+
+// 移动端整体布局调整
+@media (max-width: 768px) {
+  .sta-container {
+    padding: 5px;
+
+    .el-card {
+      margin-bottom: 10px;
+    }
+  }
 }
 </style>
