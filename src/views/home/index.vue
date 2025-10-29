@@ -109,6 +109,7 @@
   <GenerateMaterialCode
     v-model="dialogMaterialCode"
     :match-id="currentMatchId"
+    :sku-list="currentSkuList"
     @success="handleMaterialCodeSuccess"
   />
 </template>
@@ -143,6 +144,7 @@ const table = ref<ActivityInfo[]>([])
 const dialogActivity = ref<boolean>(false)
 const dialogMaterialCode = ref<boolean>(false)
 const currentMatchId = ref<number>(0)
+const currentSkuList = ref<any[]>([])
 const tabLoading = ref<boolean>(false)
 const activityInfo = ref<Partial<ActivityInfo>>({})
 const page = reactive<Pageing>({
@@ -228,9 +230,16 @@ const goToStatistics = (matchId: number) => {
   })
 }
 
-const generateMaterialCode = (matchId: number) => {
+const generateMaterialCode = async (matchId: number) => {
   currentMatchId.value = matchId
-  dialogMaterialCode.value = true
+  try {
+    const res = await getMatchInfoAPI(matchId)
+    currentSkuList.value = res.data?.skuList || []
+    dialogMaterialCode.value = true
+  } catch (error) {
+    console.error('获取赛事信息失败:', error)
+    ElMessage.error('获取赛事信息失败')
+  }
 }
 
 const handleMaterialCodeSuccess = () => {

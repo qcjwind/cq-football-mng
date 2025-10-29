@@ -18,8 +18,12 @@
     </div>
   </div>
   <div class="c-body" v-loading="tabLoading">
-    <el-table style="width: 100%" :data="table" stripe>
-      <el-table-column type="index" label="序号" width="60" align="center"></el-table-column>
+    <el-table ref="tableRef" style="width: 100%" :data="table" stripe row-key="id">
+      <el-table-column label="排序" width="80" align="center">
+        <template #default>
+          <img src="@/assets/images/draggable.png" alt="" class="draggable-handle" style="width: 20px; height: 20px;cursor: move;">
+        </template>
+      </el-table-column>
       <el-table-column prop="skuName" label="SKU名称" align="center"></el-table-column>
       <el-table-column prop="area" label="大区" align="center"></el-table-column>
       <el-table-column prop="skuType" label="票类型" align="center">
@@ -99,12 +103,19 @@
 <script setup lang="ts">
 import { BASE_URL } from '@/utils/constant'
 import { useUserStore } from '@/stores/index'
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, onMounted, onUnmounted, nextTick } from 'vue'
 import type { Pageing, SkuInfo } from '@/types'
-import { deleteSkuAPI, getMatchSkuLitAPI, updateSkuStatusAPI, uploadBatchAPI, uploadSeatsAPI } from '@/service'
+import { deleteSkuAPI, getMatchSkuLitAPI, updateSkuStatusAPI, uploadBatchAPI, uploadSeatsAPI, editSkuAPI } from '@/service'
 import { useRoute } from 'vue-router'
 import { ElMessage, type UploadRequestOptions } from 'element-plus'
 import EditSku from './components/EditSku.vue'
+import Sortable from 'sortablejs'
+import type { SortableEvent } from 'sortablejs'
+
+interface OptionData {
+  skuId?: string
+  index?: number
+}
 
 const route = useRoute()
 const userStore = useUserStore()
@@ -113,6 +124,8 @@ const table = ref<SkuInfo[]>([])
 const editSku = ref(false)
 const skuData = ref<SkuInfo | null>(null)
 const uploadLoading = ref(false)
+const tableRef = ref()
+let sortableInstance: Sortable | null = null
 const page = reactive<Pageing>({
   pageNumber: 1,
   pageSize: 50,
@@ -122,12 +135,61 @@ const getSkuList = () => {
   const param = {
     pageNumber: page.pageNumber,
     pageSize: page.pageSize,
-    matchId: route.query.matchId as number,
+    matchId: Number(route.query.matchId),
   }
   getMatchSkuLitAPI(param).then((res) => {
     table.value = res.data
     page.total = res.total
+    // 初始化拖拽排序
+    nextTick(() => {
+      initSortable()
+    })
   })
+}
+
+// 初始化拖拽排序
+const initSortable = () => {
+  if (sortableInstance) {
+    sortableInstance.destroy()
+  }
+
+  const tbody = tableRef.value?.$el?.querySelector('.el-table__body tbody')
+  if (!tbody) {
+    console.error('找不到tbody元素')
+    return
+  }
+
+  console.log('初始化Sortable, tbody:', tbody)
+
+  sortableInstance = Sortable.create(tbody, {
+    animation: 200,
+    handle: '.draggable-handle',
+    onStart: () => {
+      console.log('开始拖动')
+    },
+    onEnd: async (event: SortableEvent) => {
+      console.log('拖动结束', event)
+      const { oldIndex, newIndex } = event
+      if (oldIndex === newIndex) return
+
+      // 更新sortNumber
+      const movedItem = table.value[oldIndex!]
+      const newSortNumber = newIndex! + 1
+
+      try {
+        await editSkuAPI({ ...movedItem, sortNumber: newSortNumber })
+        movedItem.sortNumber = newSortNumber
+        ElMessage.success('排序更新成功')
+      } catch (error) {
+        console.error('更新排序失败:', error)
+        ElMessage.error('更新排序失败')
+        // 刷新列表恢复原状
+        getSkuList()
+      }
+    },
+  })
+
+  console.log('Sortable实例创建成功')
 }
 
 const editTicket = (row: SkuInfo) => {
@@ -162,10 +224,13 @@ const deleteTicketSku = (id: number) => {
 const uploadSku = (option: UploadRequestOptions | { file: File }) => {
   uploadLoading.value = true
   return new Promise((resolve, reject) => {
-    table.value[option?.data?.index as number].uploadLoading = true
+    const optionData = (option as any)?.data as OptionData
+    if (optionData?.index !== undefined) {
+      table.value[optionData.index].uploadLoading = true
+    }
     const formData = new FormData()
     formData.append('file', option.file)
-    formData.append('skuId', option?.data?.skuId as string)
+    formData.append('skuId', optionData?.skuId as string || '')
     uploadSeatsAPI(formData)
       .then(() => {
         resolve(true)
@@ -175,7 +240,9 @@ const uploadSku = (option: UploadRequestOptions | { file: File }) => {
       })
       .finally(() => {
         uploadLoading.value = false
-        table.value[option?.data?.index as number].uploadLoading = false
+        if (optionData?.index !== undefined) {
+          table.value[optionData.index].uploadLoading = false
+        }
       })
   })
 }
@@ -185,7 +252,7 @@ const uploadOss = (option: UploadRequestOptions | { file: File }) => {
   return new Promise((resolve, reject) => {
     const formData = new FormData()
     formData.append('file', option.file)
-    formData.append('matchId', route.query?.matchId as number)
+    formData.append('matchId', String(route.query?.matchId))
     uploadBatchAPI(formData)
       .then(() => {
         resolve(true)
@@ -214,6 +281,13 @@ const uploadTicket = () => {
 
 onMounted(() => {
   getSkuList()
+})
+
+// 组件卸载时销毁sortable实例
+onUnmounted(() => {
+  if (sortableInstance) {
+    sortableInstance.destroy()
+  }
 })
 </script>
 

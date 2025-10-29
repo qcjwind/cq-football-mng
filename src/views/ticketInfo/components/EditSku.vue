@@ -5,6 +5,9 @@
         <el-form-item label="SKU名称" prop="skuName">
           <el-input v-model="sku.skuName" placeholder="请输入SKU名称" />
         </el-form-item>
+        <el-form-item label="SKU备注" prop="remark">
+          <el-input v-model="sku.remark" placeholder="请输入SKU备注" />
+        </el-form-item>
         <el-form-item label="价格" prop="price">
           <el-input-number
             v-model="sku.price"
@@ -14,11 +17,11 @@
             :max="999999.99"
           />
         </el-form-item>
-        <el-form-item label="协议内容" prop="description">
+        <el-form-item label="SKU详情" prop="description">
           <AiEditor
             v-model="sku.description"
             height="500px"
-            placeholder="请输入协议内容"
+            placeholder="请输入SKU详情"
             ref="aiEditorRef"
           />
         </el-form-item>

@@ -115,6 +115,7 @@ export interface VenueInfo {
 
 export interface SkuInfo {
   area: string
+  remark: string
   gmtCreate: string
   gmtModify: string
   id: number
@@ -127,6 +128,9 @@ export interface SkuInfo {
   stockTicket: number
   totalTicket: number
   venueId: number
+  sortNumber: number
+  uploadLoading?: boolean
+  delLoading?: boolean
 }
 
 export interface TicketInfo {

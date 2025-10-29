@@ -29,6 +29,17 @@
         </el-form-item>
       </div>
 
+      <!-- SKU选择 -->
+      <div class="sku-selection" v-if="props.skuList && props.skuList.length > 0">
+        <el-form-item label="选择SKU：">
+          <el-checkbox-group v-model="selectedSkuIds">
+            <el-checkbox v-for="sku in filteredSkuList" :key="sku.id" :value="sku.id">
+              {{ sku.area }}
+            </el-checkbox>
+          </el-checkbox-group>
+        </el-form-item>
+      </div>
+
       <!-- 元素选择 -->
       <div class="element-selection">
         <el-form-item label="选择元素：">
@@ -188,9 +199,11 @@ import {
 import { Plus } from '@element-plus/icons-vue'
 import { generateMaterialCodeAPI, previewMaterialCodeAPI } from '@/service/index'
 import type { UploadRequestOptions } from 'element-plus'
+import { computed, watch } from 'vue'
 
 interface IProps {
   matchId: number
+  skuList?: any[]
 }
 
 const props = defineProps<IProps>()
@@ -208,6 +221,27 @@ const selectedElements = ref<string[]>(['qrcode'])
 const textSize = ref(30)
 const fontColor = ref('#000000')
 const generating = ref(false)
+const selectedSkuIds = ref<number[]>([])
+
+// 根据ticketType过滤SKU列表
+const filteredSkuList = computed(() => {
+  if (!props.skuList) return []
+  return props.skuList.filter((sku) => sku.skuType)
+})
+
+// 监听filteredSkuList变化，默认全选
+watch(filteredSkuList, (newList) => {
+  if (newList.length > 0) {
+    selectedSkuIds.value = newList.map((sku) => sku.id)
+  }
+}, { immediate: true })
+
+// 监听ticketType变化，更新选中的SKU
+watch(ticketType, (newType) => {
+  if (filteredSkuList.value.length > 0) {
+    selectedSkuIds.value = filteredSkuList.value.map((sku) => sku.id)
+  }
+})
 
 // 预定义颜色
 const predefineColors = [
@@ -507,6 +541,11 @@ const generateCode = () => {
     return
   }
 
+  if (selectedSkuIds.value.length === 0) {
+    ElMessage.error('请至少选择一个SKU')
+    return
+  }
+
   generating.value = true
 
   const params: any = {
@@ -515,6 +554,7 @@ const generateCode = () => {
     textSize: textSize.value,
     fontColor: fontColor.value,
     ticketType: ticketType.value,
+    skuIds: selectedSkuIds.value,
   }
 
   if (selectedElements.value.includes('qrcode')) {
@@ -565,6 +605,7 @@ const clearForm = () => {
   selectedElements.value = ['qrcode']
   textSize.value = 30
   fontColor.value = '#000000'
+  selectedSkuIds.value = []
   resetElementPositions()
 }
 </script>
